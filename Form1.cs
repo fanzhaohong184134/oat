@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
@@ -139,6 +139,12 @@ namespace Wit.Example_BWT901BLE
             saveDirectoryTextBox.Text = _cameraManager.SaveDirectory;
             cameraIpTextBox.Text = _cameraManager.CameraIp;
             captureIntervalTextBox.Text = _cameraManager.Interval.ToString();
+
+            // GroupBox居中文字、无边框
+            groupBoxConnection.Paint += GroupBoxHeader_Paint;
+            groupBoxSampling.Paint += GroupBoxHeader_Paint;
+            groupBoxSettings.Paint += GroupBoxHeader_Paint;
+            groupBoxCalibration.Paint += GroupBoxHeader_Paint;
             baseFileNameTextBox.Text = _cameraManager.BaseFileName;
 
             // 开启数据刷新线程
@@ -760,7 +766,7 @@ namespace Wit.Example_BWT901BLE
             }
 
             cameraConnectButton.Enabled = true;
-            cameraConnectButton.Text = "连接相机";
+            cameraConnectButton.Text = "连接";
         }
 
         /// <summary>
@@ -919,6 +925,24 @@ namespace Wit.Example_BWT901BLE
                 _previewForm.Show();
                 _previewForm.BringToFront();
             }
+        }
+
+        /// <summary>
+        /// GroupBox自定义绘制：居中标题、无边框
+        /// </summary>
+        private void GroupBoxHeader_Paint(object sender, PaintEventArgs e)
+        {
+            GroupBox gb = (GroupBox)sender;
+            // 清除默认边框，用背景色填充
+            using (Brush bg = new SolidBrush(gb.Parent.BackColor))
+            {
+                e.Graphics.FillRectangle(bg, 0, 0, gb.Width, 20);
+            }
+            // 居中绘制标题文字
+            TextRenderer.DrawText(e.Graphics, gb.Text, gb.Font,
+                new Rectangle(0, 0, gb.Width, 20),
+                gb.ForeColor,
+                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
         }
 
         /// <summary>

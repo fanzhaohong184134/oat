@@ -69,11 +69,10 @@ namespace Wit.Example_BWT901BLE.Camera
         public override string ToString()
         {
             string status = Success ? "OK" : "FAIL";
-            return string.Format("[{0}] {1} | {2} | {3} ({4} bytes) [{5}]",
+            return string.Format("[{0}] {1} | {2} ({3} bytes) [{4}]",
                 CaptureNo,
                 Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"),
                 FileName,
-                FilePath,
                 FileSize,
                 status);
         }

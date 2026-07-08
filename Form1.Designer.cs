@@ -1,4 +1,4 @@
-﻿
+
 namespace Wit.Example_BWT901BLE
 {
     partial class Form1
@@ -199,7 +199,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxConnection.Size = new System.Drawing.Size(260, 120);
             this.groupBoxConnection.TabIndex = 0;
             this.groupBoxConnection.TabStop = false;
-            this.groupBoxConnection.Text = "连接 Connection";
+            this.groupBoxConnection.Text = "连接";
 
             // ── sensorLabel ──
             this.sensorLabel.AutoSize = true;
@@ -276,7 +276,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSampling.Size = new System.Drawing.Size(260, 90);
             this.groupBoxSampling.TabIndex = 1;
             this.groupBoxSampling.TabStop = false;
-            this.groupBoxSampling.Text = "采样记录 Sampling";
+            this.groupBoxSampling.Text = "采样记录";
 
             // ── imuSamplingButton ──
             this.imuSamplingButton.Location = new System.Drawing.Point(10, 22);
@@ -339,7 +339,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSettings.Size = new System.Drawing.Size(260, 280);
             this.groupBoxSettings.TabIndex = 2;
             this.groupBoxSettings.TabStop = false;
-            this.groupBoxSettings.Text = "设置参数 Settings";
+            this.groupBoxSettings.Text = "设置参数";
 
             // ── imuSettingsHeaderLabel ──
             this.imuSettingsHeaderLabel.AutoSize = true;
@@ -347,7 +347,7 @@ namespace Wit.Example_BWT901BLE
             this.imuSettingsHeaderLabel.Name = "imuSettingsHeaderLabel";
             this.imuSettingsHeaderLabel.Size = new System.Drawing.Size(79, 13);
             this.imuSettingsHeaderLabel.TabIndex = 0;
-            this.imuSettingsHeaderLabel.Text = "── IMU设置 ──";
+            this.imuSettingsHeaderLabel.Text = "IMU设置";
 
             // ── returnRateLabel ──
             this.returnRateLabel.AutoSize = true;
@@ -391,7 +391,7 @@ namespace Wit.Example_BWT901BLE
             this.cameraSettingsHeaderLabel.Name = "cameraSettingsHeaderLabel";
             this.cameraSettingsHeaderLabel.Size = new System.Drawing.Size(79, 13);
             this.cameraSettingsHeaderLabel.TabIndex = 9;
-            this.cameraSettingsHeaderLabel.Text = "── 相机设置 ──";
+            this.cameraSettingsHeaderLabel.Text = "相机设置";
 
             // ── captureIntervalLabel ──
             this.captureIntervalLabel.AutoSize = true;
@@ -467,7 +467,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxCalibration.Size = new System.Drawing.Size(260, 120);
             this.groupBoxCalibration.TabIndex = 3;
             this.groupBoxCalibration.TabStop = false;
-            this.groupBoxCalibration.Text = "校准 Calibration";
+            this.groupBoxCalibration.Text = "校准";
 
             // ── magCalibrationButton ──
             this.magCalibrationButton.Location = new System.Drawing.Point(10, 22);
