@@ -373,6 +373,96 @@ namespace Wit.Example_BWT901BLE.Camera
             }
         }
 
+        /// <summary>
+        /// 启动FileSystemWatcher监控保存目录中的新jpeg文件
+        /// </summary>
+        private void StartFileWatcher()
+        {
+            try
+            {
+                _fileWatcher = new FileSystemWatcher(_saveDirectory, "*.jpeg");
+                _fileWatcher.NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size;
+                _fileWatcher.Created += FileWatcher_Created;
+                _fileWatcher.EnableRaisingEvents = true;
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// 停止FileSystemWatcher
+        /// </summary>
+        private void StopFileWatcher()
+        {
+            if (_fileWatcher != null)
+            {
+                _fileWatcher.EnableRaisingEvents = false;
+                _fileWatcher.Created -= FileWatcher_Created;
+                _fileWatcher.Dispose();
+                _fileWatcher = null;
+            }
+        }
+
+        /// <summary>
+        /// FileSystemWatcher检测到新图片文件时触发
+        /// </summary>
+        private void FileWatcher_Created(object sender, FileSystemEventArgs e)
+        {
+            if (_stopRequested || !_isCapturing)
+                return;
+
+            try
+            {
+                // 等待文件写入完成
+                System.Threading.Thread.Sleep(200);
+
+                string fileName = Path.GetFileName(e.FullPath);
+                long fileSize = 0;
+                if (File.Exists(e.FullPath))
+                {
+                    FileInfo fi = new FileInfo(e.FullPath);
+                    fileSize = fi.Length;
+                }
+
+                DateTime now = DateTime.Now;
+                _captureCount++;
+
+                CameraLogRecord record = new CameraLogRecord
+                {
+                    CaptureNo = _captureCount,
+                    Timestamp = now,
+                    ElapsedMs = (now - _captureStartTime).TotalMilliseconds,
+                    FileName = fileName,
+                    FilePath = e.FullPath,
+                    FileSize = fileSize,
+                    Success = true
+                };
+
+                // 写入CSV
+                if (_csvLogger != null && _csvLogger.IsRecording)
+                {
+                    _csvLogger.WriteRecord(record);
+                }
+
+                // 加载预览图
+                try
+                {
+                    if (File.Exists(e.FullPath))
+                    {
+                        byte[] imgBytes = File.ReadAllBytes(e.FullPath);
+                        using (MemoryStream ms = new MemoryStream(imgBytes))
+                        {
+                            Image img = Image.FromStream(ms);
+                            OnPreviewImage?.Invoke(img);
+                        }
+                    }
+                }
+                catch { }
+
+                OnCaptureLog?.Invoke(record);
+            }
+            catch { }
+        }
+
         public void Dispose()
         {
             StopCapture();
