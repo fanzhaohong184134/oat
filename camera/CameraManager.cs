@@ -32,6 +32,7 @@ namespace Wit.Example_BWT901BLE.Camera
         private bool _stopRequested;
         private CameraSamplingLogger _csvLogger;
         private DateTime _captureStartTime;
+        private FileSystemWatcher _fileWatcher;
 
         public bool IsCapturing => _isCapturing;
         public int CaptureCount => _captureCount;
@@ -187,6 +188,9 @@ namespace Wit.Example_BWT901BLE.Camera
             _csvLogger = new CameraSamplingLogger();
             _csvLogger.StartRecording(logDir, _cameraIp);
 
+            // 启动FileSystemWatcher监控新图片（主检测方式，不依赖stdout缓冲）
+            StartFileWatcher();
+
             // 启动demo_jpeg_app.exe进程 (不限次数, 持续运行)
             // 命令: demo_jpeg_app.exe -i {ip} -d {interval} -f {prefix}
             ProcessStartInfo psi = new ProcessStartInfo
@@ -204,7 +208,7 @@ namespace Wit.Example_BWT901BLE.Camera
             {
                 _captureProcess = Process.Start(psi);
 
-                // 异步读取stdout，实时解析拍照日志
+                // 异步读取stdout（作为备用，当exe修复后也能工作）
                 _captureProcess.OutputDataReceived += CaptureProcess_OutputDataReceived;
                 _captureProcess.BeginOutputReadLine();
 
@@ -222,6 +226,7 @@ namespace Wit.Example_BWT901BLE.Camera
             catch (Exception ex)
             {
                 _isCapturing = false;
+                StopFileWatcher();
                 OnStatusChanged?.Invoke("启动拍照失败: " + ex.Message);
             }
         }
@@ -236,6 +241,8 @@ namespace Wit.Example_BWT901BLE.Camera
 
             _stopRequested = true;
             _isCapturing = false;
+
+            StopFileWatcher();
 
             if (_captureProcess != null)
             {
