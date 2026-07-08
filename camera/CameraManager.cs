@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -33,6 +34,8 @@ namespace Wit.Example_BWT901BLE.Camera
         private CameraSamplingLogger _csvLogger;
         private DateTime _captureStartTime;
         private FileSystemWatcher _fileWatcher;
+        private readonly HashSet<string> _processedFiles = new HashSet<string>();
+        private readonly object _processedFilesLock = new object();
 
         public bool IsCapturing => _isCapturing;
         public int CaptureCount => _captureCount;
@@ -182,6 +185,7 @@ namespace Wit.Example_BWT901BLE.Camera
             _isCapturing = true;
             _captureCount = 0;
             _captureStartTime = DateTime.Now;
+            lock (_processedFilesLock) { _processedFiles.Clear(); }
 
             // 启动CSV日志
             string logDir = Path.Combine(_saveDirectory, "logs");
@@ -282,8 +286,17 @@ namespace Wit.Example_BWT901BLE.Camera
             Match m = Regex.Match(line, @"\[(\d+)\] Saved: (\S+) \((\d+) bytes\)");
             if (m.Success)
             {
-                int captureNo = int.Parse(m.Groups[1].Value);
                 string fileName = m.Groups[2].Value;
+
+                // 去重：FileSystemWatcher可能已记录过此文件
+                lock (_processedFilesLock)
+                {
+                    if (_processedFiles.Contains(fileName))
+                        return;
+                    _processedFiles.Add(fileName);
+                }
+
+                int captureNo = int.Parse(m.Groups[1].Value);
                 int fileSize = int.Parse(m.Groups[3].Value);
                 string filePath = Path.Combine(_saveDirectory, fileName);
                 DateTime now = DateTime.Now;
@@ -416,6 +429,15 @@ namespace Wit.Example_BWT901BLE.Camera
                 System.Threading.Thread.Sleep(200);
 
                 string fileName = Path.GetFileName(e.FullPath);
+
+                // 去重：OutputDataReceived可能已记录过此文件
+                lock (_processedFilesLock)
+                {
+                    if (_processedFiles.Contains(fileName))
+                        return;
+                    _processedFiles.Add(fileName);
+                }
+
                 long fileSize = 0;
                 if (File.Exists(e.FullPath))
                 {
