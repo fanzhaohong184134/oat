@@ -126,8 +126,18 @@ namespace Wit.Example_BWT901BLE.Camera
 
                 using (Process proc = Process.Start(psi))
                 {
-                    string output = proc.StandardOutput.ReadToEnd();
-                    proc.WaitForExit(15000);
+                    // 异步读取stdout，设置10秒超时
+                    var readTask = proc.StandardOutput.ReadToEndAsync();
+                    int timeoutMs = 10000;
+
+                    if (!readTask.Wait(timeoutMs))
+                    {
+                        try { proc.Kill(); } catch { }
+                        OnStatusChanged?.Invoke("连接超时，请检查IP地址和网络");
+                        return false;
+                    }
+
+                    string output = readTask.Result;
 
                     if (output.Contains("Saved"))
                     {

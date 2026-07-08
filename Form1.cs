@@ -741,7 +741,7 @@ namespace Wit.Example_BWT901BLE
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        private void cameraConnectButton_Click(object sender, EventArgs e)
+        private async void cameraConnectButton_Click(object sender, EventArgs e)
         {
             string ip = cameraIpTextBox.Text.Trim();
             if (string.IsNullOrEmpty(ip))
@@ -754,19 +754,30 @@ namespace Wit.Example_BWT901BLE
             cameraConnectButton.Enabled = false;
             cameraConnectButton.Text = "连接中...";
 
-            bool result = _cameraManager.TestConnection();
-
-            if (result)
+            try
             {
-                cameraStatusLight.BackColor = Color.Green;
+                bool result = await Task.Run(() => _cameraManager.TestConnection());
+
+                if (result)
+                {
+                    cameraStatusLight.BackColor = Color.Green;
+                }
+                else
+                {
+                    cameraStatusLight.BackColor = Color.Gray;
+                    MessageBox.Show("连接相机失败，请检查IP地址和网络", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                }
             }
-            else
+            catch (Exception ex)
             {
                 cameraStatusLight.BackColor = Color.Gray;
+                MessageBox.Show("连接相机异常: " + ex.Message, "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
-            cameraConnectButton.Enabled = true;
-            cameraConnectButton.Text = "连接";
+            finally
+            {
+                cameraConnectButton.Enabled = true;
+                cameraConnectButton.Text = "连接";
+            }
         }
 
         /// <summary>
