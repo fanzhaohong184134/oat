@@ -928,21 +928,40 @@ namespace Wit.Example_BWT901BLE
         }
 
         /// <summary>
-        /// GroupBox自定义绘制：居中标题、无边框
+        /// GroupBox自定义绘制：保留边框线，文字居中、加粗黑色
         /// </summary>
         private void GroupBoxHeader_Paint(object sender, PaintEventArgs e)
         {
             GroupBox gb = (GroupBox)sender;
-            // 清除默认边框，用背景色填充
-            using (Brush bg = new SolidBrush(gb.Parent.BackColor))
+            e.Graphics.Clear(gb.BackColor);
+
+            Size textSize = TextRenderer.MeasureText(gb.Text, gb.Font);
+            int textLeft = (gb.Width - textSize.Width) / 2;
+            int textTop = (20 - textSize.Height) / 2;
+
+            // 绘制边框线（上方中间断开放文字）
+            using (Pen pen = new Pen(SystemColors.ControlDark))
             {
-                e.Graphics.FillRectangle(bg, 0, 0, gb.Width, 20);
+                // 左边线段
+                e.Graphics.DrawLine(pen, 0, 7, textLeft - 4, 7);
+                // 右边线段
+                e.Graphics.DrawLine(pen, textLeft + textSize.Width + 4, 7, gb.Width, 7);
+                // 左竖线
+                e.Graphics.DrawLine(pen, 0, 7, 0, gb.Height - 1);
+                // 右竖线
+                e.Graphics.DrawLine(pen, gb.Width - 1, 7, gb.Width - 1, gb.Height - 1);
+                // 底边线
+                e.Graphics.DrawLine(pen, 0, gb.Height - 1, gb.Width - 1, gb.Height - 1);
             }
-            // 居中绘制标题文字
-            TextRenderer.DrawText(e.Graphics, gb.Text, gb.Font,
-                new Rectangle(0, 0, gb.Width, 20),
-                gb.ForeColor,
-                TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+
+            // 居中绘制加粗黑色标题
+            using (Font boldFont = new Font(gb.Font, FontStyle.Bold))
+            {
+                TextRenderer.DrawText(e.Graphics, gb.Text, boldFont,
+                    new Rectangle(textLeft, textTop, textSize.Width, textSize.Height),
+                    Color.Black,
+                    TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
         }
 
         /// <summary>
