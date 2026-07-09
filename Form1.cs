@@ -6,6 +6,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 using Wit.SDK.Modular.Sensor.Modular.DataProcessor.Constant;
 using Wit.SDK.Modular.WitSensorApi.Modular.BWT901BLE;

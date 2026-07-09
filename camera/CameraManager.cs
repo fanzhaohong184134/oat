@@ -37,6 +37,13 @@ namespace Wit.Example_BWT901BLE.Camera
         private readonly HashSet<string> _processedFiles = new HashSet<string>();
         private readonly object _processedFilesLock = new object();
 
+        // 预览相关成员
+        private Process _previewProcess;
+        private string _previewOutputDir;
+        private FileSystemWatcher _previewFileWatcher;
+        private bool _isPreviewRunning;
+        private int _previewFrameCount;
+
         public bool IsCapturing => _isCapturing;
         public int CaptureCount => _captureCount;
 
@@ -499,5 +506,227 @@ namespace Wit.Example_BWT901BLE.Camera
         {
             StopCapture();
         }
+
+        #region 实时预览功能
+
+        /// <summary>
+        /// 是否正在预览
+        /// </summary>
+        public bool IsPreviewRunning => _isPreviewRunning;
+
+        /// <summary>
+        /// 获取预览进程输出目录
+        /// </summary>
+        public string PreviewOutputDir => _previewOutputDir;
+
+        /// <summary>
+        /// 获取预览exe路径
+        /// </summary>
+        private string GetPreviewExePath()
+        {
+            // 1. 优先查找输出目录
+            string appDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "demo_h264_app.exe");
+            if (File.Exists(appDir))
+                return appDir;
+
+            // 2. 查找camera子目录
+            string localPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "camera", "dlls", "x64", "Release", "demo_h264_app.exe");
+            if (File.Exists(localPath))
+                return localPath;
+
+            return appDir;
+        }
+
+        /// <summary>
+        /// 启动实时预览
+        /// </summary>
+        public void StartPreview(int fps = 15)
+        {
+            if (_isPreviewRunning)
+                return;
+
+            string exePath = GetPreviewExePath();
+            if (!File.Exists(exePath))
+            {
+                OnStatusChanged?.Invoke("demo_h264_app.exe 未找到: " + exePath);
+                return;
+            }
+
+            // 创建预览输出目录
+            _previewOutputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "preview_frames");
+            if (!Directory.Exists(_previewOutputDir))
+                Directory.CreateDirectory(_previewOutputDir);
+
+            // 清理旧文件
+            try
+            {
+                foreach (var file in Directory.GetFiles(_previewOutputDir, "*.jpg"))
+                    File.Delete(file);
+            }
+            catch { }
+
+            _isPreviewRunning = true;
+            _previewFrameCount = 0;
+
+            // 启动预览进程
+            ProcessStartInfo psi = new ProcessStartInfo
+            {
+                FileName = exePath,
+                Arguments = string.Format("-i {0} -o \"{1}\" -f {2}", _cameraIp, _previewOutputDir, fps),
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true,
+                WorkingDirectory = _previewOutputDir
+            };
+
+            try
+            {
+                _previewProcess = Process.Start(psi);
+                _previewProcess.OutputDataReceived += PreviewProcess_OutputDataReceived;
+                _previewProcess.ErrorDataReceived += PreviewProcess_ErrorDataReceived;
+                _previewProcess.BeginOutputReadLine();
+                _previewProcess.BeginErrorReadLine();
+
+                // 启动文件监控
+                StartPreviewFileWatcher();
+
+                OnStatusChanged?.Invoke(string.Format("预览已启动: IP={0}, FPS={1}", _cameraIp, fps));
+            }
+            catch (Exception ex)
+            {
+                _isPreviewRunning = false;
+                OnStatusChanged?.Invoke("启动预览失败: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// 停止实时预览
+        /// </summary>
+        public void StopPreview()
+        {
+            if (!_isPreviewRunning)
+                return;
+
+            _isPreviewRunning = false;
+
+            // 停止文件监控
+            StopPreviewFileWatcher();
+
+            // 停止进程
+            if (_previewProcess != null)
+            {
+                try
+                {
+                    if (!_previewProcess.HasExited)
+                    {
+                        _previewProcess.Kill();
+                    }
+                    _previewProcess.Dispose();
+                }
+                catch { }
+                _previewProcess = null;
+            }
+
+            OnStatusChanged?.Invoke(string.Format("预览已停止，共 {0} 帧", _previewFrameCount));
+        }
+
+        /// <summary>
+        /// 启动预览帧文件监控
+        /// </summary>
+        private void StartPreviewFileWatcher()
+        {
+            try
+            {
+                _previewFileWatcher = new FileSystemWatcher(_previewOutputDir, "*.jpg")
+                {
+                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size,
+                    EnableRaisingEvents = true
+                };
+                _previewFileWatcher.Created += PreviewFileWatcher_Created;
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// 停止预览帧文件监控
+        /// </summary>
+        private void StopPreviewFileWatcher()
+        {
+            if (_previewFileWatcher != null)
+            {
+                try
+                {
+                    _previewFileWatcher.EnableRaisingEvents = false;
+                    _previewFileWatcher.Created -= PreviewFileWatcher_Created;
+                    _previewFileWatcher.Dispose();
+                }
+                catch { }
+                _previewFileWatcher = null;
+            }
+        }
+
+        /// <summary>
+        /// 处理新预览帧文件
+        /// </summary>
+        private void PreviewFileWatcher_Created(object sender, FileSystemEventArgs e)
+        {
+            if (!_isPreviewRunning)
+                return;
+
+            try
+            {
+                // 等待文件写入完成
+                System.Threading.Thread.Sleep(50);
+
+                // 读取图像
+                using (FileStream fs = new FileStream(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (Image img = Image.FromStream(fs))
+                {
+                    _previewFrameCount++;
+                    OnPreviewImage?.Invoke(new Bitmap(img));
+                }
+
+                // 删除已处理的文件（避免堆积）
+                try { File.Delete(e.FullPath); } catch { }
+            }
+            catch { }
+        }
+
+        /// <summary>
+        /// 处理预览进程输出
+        /// </summary>
+        private void PreviewProcess_OutputDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (string.IsNullOrEmpty(e.Data))
+                return;
+
+            string line = e.Data;
+
+            // 匹配: FRAME filename size quality
+            if (line.StartsWith("FRAME "))
+            {
+                // 帧已处理，由FileSystemWatcher处理图像加载
+            }
+            // 匹配: STATUS message
+            else if (line.StartsWith("STATUS "))
+            {
+                string status = line.Substring(7);
+                OnStatusChanged?.Invoke("[预览] " + status);
+            }
+        }
+
+        /// <summary>
+        /// 处理预览进程错误输出
+        /// </summary>
+        private void PreviewProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e)
+        {
+            if (!string.IsNullOrEmpty(e.Data))
+            {
+                OnStatusChanged?.Invoke("[预览错误] " + e.Data);
+            }
+        }
+
+        #endregion
     }
 }
