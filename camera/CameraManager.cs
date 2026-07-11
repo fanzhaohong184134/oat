@@ -584,14 +584,6 @@ namespace Wit.Example_BWT901BLE.Camera
             if (!Directory.Exists(_previewOutputDir))
                 Directory.CreateDirectory(_previewOutputDir);
 
-            string h264Path = Path.Combine(_previewOutputDir, "out.h264");
-            try
-            {
-                if (File.Exists(h264Path))
-                    File.Delete(h264Path);
-            }
-            catch { }
-
             _isPreviewRunning = true;
             _previewFrameCount = 0;
             _lastPreviewFramePath = null;
@@ -610,12 +602,17 @@ namespace Wit.Example_BWT901BLE.Camera
                 };
 
                 _previewProcess = Process.Start(previewPsi);
-                _previewProcess.OutputDataReceived += PreviewProcess_OutputDataReceived;
+                if (_previewProcess == null)
+                {
+                    _isPreviewRunning = false;
+                    OnStatusChanged?.Invoke("启动预览失败: demo_h264_app.exe 启动失败");
+                    return;
+                }
+
                 _previewProcess.ErrorDataReceived += PreviewProcess_ErrorDataReceived;
-                _previewProcess.BeginOutputReadLine();
                 _previewProcess.BeginErrorReadLine();
 
-                Thread ffmpegStarter = new Thread(() => StartFfmpegPreview(ffmpegExe, h264Path, fps));
+                Thread ffmpegStarter = new Thread(() => StartFfmpegPreview(ffmpegExe, _previewProcess.StandardOutput.BaseStream, fps));
                 ffmpegStarter.IsBackground = true;
                 ffmpegStarter.Start();
 
@@ -687,25 +684,19 @@ namespace Wit.Example_BWT901BLE.Camera
         {
         }
 
-        private void StartFfmpegPreview(string ffmpegExe, string h264Path, int fps)
+        private void StartFfmpegPreview(string ffmpegExe, Stream h264Stream, int fps)
         {
             try
             {
-                for (int i = 0; i < 100 && _isPreviewRunning; i++)
-                {
-                    if (File.Exists(h264Path) && new FileInfo(h264Path).Length > 0)
-                        break;
-                    Thread.Sleep(100);
-                }
-
                 if (!_isPreviewRunning)
                     return;
 
                 ProcessStartInfo ffmpegPsi = new ProcessStartInfo
                 {
                     FileName = ffmpegExe,
-                    Arguments = string.Format("-fflags nobuffer -flags low_delay -f h264 -r {0} -i \"{1}\" -vf fps={0},scale=960:-1 -f image2pipe -vcodec mjpeg -q:v 5 -", fps, h264Path),
+                    Arguments = string.Format("-fflags nobuffer -flags low_delay -f h264 -r {0} -i pipe:0 -vf fps={0},scale=960:-1 -f image2pipe -vcodec mjpeg -q:v 5 pipe:1", fps),
                     UseShellExecute = false,
+                    RedirectStandardInput = true,
                     RedirectStandardOutput = true,
                     RedirectStandardError = true,
                     CreateNoWindow = true,
@@ -722,11 +713,40 @@ namespace Wit.Example_BWT901BLE.Camera
                 _ffmpegProcess.ErrorDataReceived += PreviewProcess_ErrorDataReceived;
                 _ffmpegProcess.BeginErrorReadLine();
 
+                Thread pipeThread = new Thread(() => PipeH264ToFfmpeg(h264Stream, _ffmpegProcess.StandardInput.BaseStream));
+                pipeThread.IsBackground = true;
+                pipeThread.Start();
+
                 ReadMjpegFrames(_ffmpegProcess.StandardOutput.BaseStream);
             }
             catch (Exception ex)
             {
                 OnStatusChanged?.Invoke("[预览] FFmpeg异常: " + ex.Message);
+            }
+        }
+
+        private void PipeH264ToFfmpeg(Stream input, Stream output)
+        {
+            byte[] buffer = new byte[64 * 1024];
+            try
+            {
+                while (_isPreviewRunning)
+                {
+                    int read = input.Read(buffer, 0, buffer.Length);
+                    if (read <= 0)
+                        break;
+
+                    output.Write(buffer, 0, read);
+                    output.Flush();
+                }
+            }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke("[预览] H264 管道失败: " + ex.Message);
+            }
+            finally
+            {
+                try { output.Close(); } catch { }
             }
         }
 

@@ -9,6 +9,8 @@
 
 #ifdef _WIN32
 #include <windows.h>
+#include <fcntl.h>
+#include <io.h>
 #else
 #include <unistd.h>
 #define Sleep(ms) usleep((ms) * 1000)
@@ -19,7 +21,6 @@ int g_is_on = NI_TRUE;
 int main(int argc, char *argv[])
 {
     void* ctx = NULL;
-    FILE* pf = NULL;
     int len;
     int ret;
     unsigned char* buff = NULL;
@@ -36,33 +37,27 @@ int main(int argc, char *argv[])
         }
     }
 
-    printf("STATUS Connecting to camera %s ...\n", ip);
-    fflush(stdout);
+#ifdef _WIN32
+    _setmode(_fileno(stdout), _O_BINARY);
+#endif
+
+    fprintf(stderr, "STATUS Connecting to camera %s ...\n", ip);
+    fflush(stderr);
 
     len = 10 * 1024 * 1024;
     ring_buffer_t* rb = rb_create(len);
     if (NULL == rb)
     {
-        printf("STATUS ERROR: rb_create failed\n");
-        fflush(stdout);
+        fprintf(stderr, "STATUS ERROR: rb_create failed\n");
+        fflush(stderr);
         return 1;
     }
 
     ctx = ws_init(rb, ip);
     if (NULL == ctx)
     {
-        printf("STATUS ERROR: ws_init failed\n");
-        fflush(stdout);
-        rb_destory(rb);
-        return 1;
-    }
-
-    pf = fopen("out.h264", "wb");
-    if (NULL == pf)
-    {
-        printf("STATUS ERROR: fopen out.h264 failed\n");
-        fflush(stdout);
-        ws_stop(ctx);
+        fprintf(stderr, "STATUS ERROR: ws_init failed\n");
+        fflush(stderr);
         rb_destory(rb);
         return 1;
     }
@@ -71,30 +66,29 @@ int main(int argc, char *argv[])
     buff = (unsigned char*)malloc(len);
     if (NULL == buff)
     {
-        printf("STATUS ERROR: malloc buffer failed\n");
-        fflush(stdout);
-        fclose(pf);
+        fprintf(stderr, "STATUS ERROR: malloc buffer failed\n");
+        fflush(stderr);
         ws_stop(ctx);
         rb_destory(rb);
         return 1;
     }
 
-    printf("STATUS H264 stream started\n");
-    fflush(stdout);
+    fprintf(stderr, "STATUS H264 stream started\n");
+    fflush(stderr);
 
     while (NI_TRUE == g_is_on)
     {
         ret = ws_get_data(buff, len);
         if (ret > 4)
         {
-            fwrite(buff + 4, ret - 4, 1, pf);
-            fflush(pf);
+            fwrite(buff + 4, 1, ret - 4, stdout);
+            fflush(stdout);
             total_bytes += (ret - 4);
 
             if (total_bytes % (1024 * 1024) < (ret - 4))
             {
-                printf("STATUS Streamed %d bytes\n", total_bytes);
-                fflush(stdout);
+                fprintf(stderr, "STATUS Streamed %d bytes\n", total_bytes);
+                fflush(stderr);
             }
         }
         else
@@ -105,10 +99,9 @@ int main(int argc, char *argv[])
 
     ws_stop(ctx);
     free(buff);
-    fclose(pf);
     rb_destory(rb);
 
-    printf("STATUS H264 stream stopped\n");
-    fflush(stdout);
+    fprintf(stderr, "STATUS H264 stream stopped\n");
+    fflush(stderr);
     return 0;
 }
