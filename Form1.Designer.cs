@@ -451,7 +451,7 @@ namespace Wit.Example_BWT901BLE
             this.showPreviewButton.Name = "showPreviewButton";
             this.showPreviewButton.Size = new System.Drawing.Size(200, 25);
             this.showPreviewButton.TabIndex = 20;
-            this.showPreviewButton.Text = "显示预览窗口";
+            this.showPreviewButton.Text = "相机预览";
             this.showPreviewButton.UseVisualStyleBackColor = true;
             this.showPreviewButton.Click += new System.EventHandler(this.showPreviewButton_Click);
 

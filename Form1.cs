@@ -938,7 +938,7 @@ namespace Wit.Example_BWT901BLE
             if (_cameraManager.IsPreviewRunning)
             {
                 _cameraManager.StopPreview();
-                showPreviewButton.Text = "显示预览窗口";
+                showPreviewButton.Text = "相机预览";
                 showPreviewButton.BackColor = SystemColors.Control;
                 return;
             }
@@ -1064,13 +1064,13 @@ namespace Wit.Example_BWT901BLE
                 if ((status.Contains("启动预览失败") || status.Contains("未找到") || status.Contains("[预览错误]"))
                     && showPreviewButton.Text == "停止预览")
                 {
-                    showPreviewButton.Text = "显示预览窗口";
+                    showPreviewButton.Text = "相机预览";
                     showPreviewButton.BackColor = SystemColors.Control;
                 }
 
                 if (!_cameraManager.IsPreviewRunning && showPreviewButton.Text == "停止预览")
                 {
-                    showPreviewButton.Text = "显示预览窗口";
+                    showPreviewButton.Text = "相机预览";
                     showPreviewButton.BackColor = SystemColors.Control;
                 }
             }

@@ -826,10 +826,61 @@ namespace Wit.Example_BWT901BLE.Camera
         /// </summary>
         private void PreviewProcess_ErrorDataReceived(object sender, DataReceivedEventArgs e)
         {
-            if (!string.IsNullOrEmpty(e.Data))
+            if (string.IsNullOrEmpty(e.Data))
+                return;
+
+            string line = e.Data.Trim();
+            if (line.Length == 0)
+                return;
+
+            if (line.StartsWith("STATUS "))
             {
-                OnStatusChanged?.Invoke("[预览错误] " + e.Data);
+                OnStatusChanged?.Invoke("[预览] " + line.Substring(7));
+                return;
             }
+
+            if (IsPreviewInfoLog(line))
+            {
+                OnStatusChanged?.Invoke("[预览日志] " + line);
+                return;
+            }
+
+            OnStatusChanged?.Invoke("[预览错误] " + line);
+        }
+
+        private bool IsPreviewInfoLog(string line)
+        {
+            if (Regex.IsMatch(line, @"^\[\d{4}/\d{2}/\d{2} .*\] [NWU]:"))
+                return true;
+
+            if (line.StartsWith("ffmpeg version ")
+                || line.StartsWith("built with ")
+                || line.StartsWith("configuration: ")
+                || line.StartsWith("libavutil")
+                || line.StartsWith("libavcodec")
+                || line.StartsWith("libavformat")
+                || line.StartsWith("libavdevice")
+                || line.StartsWith("libavfilter")
+                || line.StartsWith("libswscale")
+                || line.StartsWith("libswresample")
+                || line.StartsWith("Input #")
+                || line.StartsWith("Output #")
+                || line.StartsWith("Stream mapping:")
+                || line.StartsWith("Duration:")
+                || line.StartsWith("Metadata:")
+                || line.StartsWith("Side data:")
+                || line.StartsWith("frame=")
+                || line.StartsWith("encoder         :")
+                || line.StartsWith("CPB properties:"))
+                return true;
+
+            if (Regex.IsMatch(line, @"^Stream #\d+:\d+"))
+                return true;
+
+            if (Regex.IsMatch(line, @"^\[[^\]]+\] "))
+                return true;
+
+            return false;
         }
 
         #endregion

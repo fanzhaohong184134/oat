@@ -30,17 +30,6 @@ namespace Wit.Example_BWT901BLE.Camera
             this.FormBorderStyle = FormBorderStyle.SizableToolWindow;
             this.MinimumSize = new Size(320, 280);
 
-            // 状态标签
-            _statusLabel = new Label
-            {
-                Dock = DockStyle.Bottom,
-                Height = 25,
-                Text = "等待相机连接...",
-                TextAlign = ContentAlignment.MiddleLeft,
-                BackColor = Color.FromArgb(240, 240, 240),
-                Padding = new Padding(5, 0, 0, 0)
-            };
-
             // 图片显示
             _pictureBox = new PictureBox
             {
@@ -92,19 +81,6 @@ namespace Wit.Example_BWT901BLE.Camera
         /// </summary>
         public void UpdateStatus(string status)
         {
-            if (this.IsDisposed) return;
-
-            if (this.InvokeRequired)
-            {
-                try
-                {
-                    this.BeginInvoke(new Action(() => UpdateStatus(status)));
-                }
-                catch { }
-                return;
-            }
-
-            _statusLabel.Text = status;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
