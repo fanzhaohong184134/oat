@@ -12,8 +12,8 @@ set "SRC_DIR=%SCRIPT_DIR%src"
 set "INCLUDE_DIR=%SCRIPT_DIR%include"
 set "LIB_DIR=%SCRIPT_DIR%libs\x64\Release"
 set "OUTPUT_DIR=%SCRIPT_DIR%dlls\x64\Release"
-set "CL_FLAGS=/nologo /W3 /O2 /EHsc /D_CRT_SECURE_NO_WARNINGS"
-set "LINK_LIBS=libsvplayer.lib websockets.lib libcurl.lib ws2_32.lib wldap32.lib advapi32.lib crypt32.lib user32.lib"
+set "CL_FLAGS=/nologo /W3 /O2 /EHsc /MD /D_CRT_SECURE_NO_WARNINGS"
+set "LINK_LIBS=libsvplayer.lib websockets.lib libcurl.lib ws2_32.lib wldap32.lib advapi32.lib crypt32.lib user32.lib kernel32.lib"
 
 REM 检查源文件
 if exist "%SRC_DIR%\demo_jpeg_app.c" goto :src_ok
@@ -93,7 +93,7 @@ REM 编译 demo_h264_app.exe
 if exist "%OUTPUT_DIR%\demo_h264_app.exe" goto :skip_h264
 if not exist "%SRC_DIR%\demo_h264_app.c" goto :skip_h264
 echo [build_camera] Compiling demo_h264_app.exe ...
-cl.exe %CL_FLAGS% /I"%INCLUDE_DIR%" "%SRC_DIR%\demo_h264_app.c" /link /LIBPATH:"%LIB_DIR%" %LINK_LIBS% /OUT:"%OUTPUT_DIR%\demo_h264_app.exe"
+cl.exe %CL_FLAGS% /I"%INCLUDE_DIR%" /I"%INCLUDE_DIR%\libwebsockets" /I"%INCLUDE_DIR%\curl" "%SRC_DIR%\demo_h264_app.c" /link /LIBPATH:"%LIB_DIR%" %LINK_LIBS% /OUT:"%OUTPUT_DIR%\demo_h264_app.exe"
 if errorlevel 1 (
     echo [build_camera] demo_h264_app.exe compile failed.
 ) else (

@@ -39,10 +39,12 @@ namespace Wit.Example_BWT901BLE.Camera
 
         // 预览相关成员
         private Process _previewProcess;
+        private Process _ffmpegProcess;
         private string _previewOutputDir;
         private FileSystemWatcher _previewFileWatcher;
         private bool _isPreviewRunning;
         private int _previewFrameCount;
+        private string _lastPreviewFramePath;
 
         public bool IsCapturing => _isCapturing;
         public int CaptureCount => _captureCount;
@@ -537,6 +539,25 @@ namespace Wit.Example_BWT901BLE.Camera
             return appDir;
         }
 
+        private string GetFfmpegExePath()
+        {
+            string[] candidates = new[]
+            {
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg.exe"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ffmpeg-8.1.2-essentials_build", "ffmpeg-8.1.2-essentials_build", "bin", "ffmpeg.exe"),
+                Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "..", "..", "ffmpeg-8.1.2-essentials_build", "ffmpeg-8.1.2-essentials_build", "bin", "ffmpeg.exe")
+            };
+
+            foreach (string path in candidates)
+            {
+                string fullPath = Path.GetFullPath(path);
+                if (File.Exists(fullPath))
+                    return fullPath;
+            }
+
+            return candidates[0];
+        }
+
         /// <summary>
         /// 启动实时预览
         /// </summary>
@@ -552,44 +573,51 @@ namespace Wit.Example_BWT901BLE.Camera
                 return;
             }
 
-            // 创建预览输出目录
-            _previewOutputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "preview_frames");
+            string ffmpegExe = GetFfmpegExePath();
+            if (!File.Exists(ffmpegExe))
+            {
+                OnStatusChanged?.Invoke("ffmpeg.exe 未找到: " + ffmpegExe);
+                return;
+            }
+
+            _previewOutputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "preview_stream");
             if (!Directory.Exists(_previewOutputDir))
                 Directory.CreateDirectory(_previewOutputDir);
 
-            // 清理旧文件
+            string h264Path = Path.Combine(_previewOutputDir, "out.h264");
             try
             {
-                foreach (var file in Directory.GetFiles(_previewOutputDir, "*.jpg"))
-                    File.Delete(file);
+                if (File.Exists(h264Path))
+                    File.Delete(h264Path);
             }
             catch { }
 
             _isPreviewRunning = true;
             _previewFrameCount = 0;
-
-            // 启动预览进程
-            ProcessStartInfo psi = new ProcessStartInfo
-            {
-                FileName = exePath,
-                Arguments = string.Format("-i {0} -o \"{1}\" -f {2}", _cameraIp, _previewOutputDir, fps),
-                UseShellExecute = false,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                CreateNoWindow = true,
-                WorkingDirectory = _previewOutputDir
-            };
+            _lastPreviewFramePath = null;
 
             try
             {
-                _previewProcess = Process.Start(psi);
+                ProcessStartInfo previewPsi = new ProcessStartInfo
+                {
+                    FileName = exePath,
+                    Arguments = string.Format("-i {0}", _cameraIp),
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    WorkingDirectory = _previewOutputDir
+                };
+
+                _previewProcess = Process.Start(previewPsi);
                 _previewProcess.OutputDataReceived += PreviewProcess_OutputDataReceived;
                 _previewProcess.ErrorDataReceived += PreviewProcess_ErrorDataReceived;
                 _previewProcess.BeginOutputReadLine();
                 _previewProcess.BeginErrorReadLine();
 
-                // 启动文件监控
-                StartPreviewFileWatcher();
+                Thread ffmpegStarter = new Thread(() => StartFfmpegPreview(ffmpegExe, h264Path, fps));
+                ffmpegStarter.IsBackground = true;
+                ffmpegStarter.Start();
 
                 OnStatusChanged?.Invoke(string.Format("预览已启动: IP={0}, FPS={1}", _cameraIp, fps));
             }
@@ -612,6 +640,20 @@ namespace Wit.Example_BWT901BLE.Camera
 
             // 停止文件监控
             StopPreviewFileWatcher();
+
+            if (_ffmpegProcess != null)
+            {
+                try
+                {
+                    if (!_ffmpegProcess.HasExited)
+                    {
+                        _ffmpegProcess.Kill();
+                    }
+                    _ffmpegProcess.Dispose();
+                }
+                catch { }
+                _ffmpegProcess = null;
+            }
 
             // 停止进程
             if (_previewProcess != null)
@@ -636,16 +678,6 @@ namespace Wit.Example_BWT901BLE.Camera
         /// </summary>
         private void StartPreviewFileWatcher()
         {
-            try
-            {
-                _previewFileWatcher = new FileSystemWatcher(_previewOutputDir, "*.jpg")
-                {
-                    NotifyFilter = NotifyFilters.FileName | NotifyFilters.Size,
-                    EnableRaisingEvents = true
-                };
-                _previewFileWatcher.Created += PreviewFileWatcher_Created;
-            }
-            catch { }
         }
 
         /// <summary>
@@ -653,44 +685,103 @@ namespace Wit.Example_BWT901BLE.Camera
         /// </summary>
         private void StopPreviewFileWatcher()
         {
-            if (_previewFileWatcher != null)
+        }
+
+        private void StartFfmpegPreview(string ffmpegExe, string h264Path, int fps)
+        {
+            try
             {
-                try
+                for (int i = 0; i < 100 && _isPreviewRunning; i++)
                 {
-                    _previewFileWatcher.EnableRaisingEvents = false;
-                    _previewFileWatcher.Created -= PreviewFileWatcher_Created;
-                    _previewFileWatcher.Dispose();
+                    if (File.Exists(h264Path) && new FileInfo(h264Path).Length > 0)
+                        break;
+                    Thread.Sleep(100);
                 }
-                catch { }
-                _previewFileWatcher = null;
+
+                if (!_isPreviewRunning)
+                    return;
+
+                ProcessStartInfo ffmpegPsi = new ProcessStartInfo
+                {
+                    FileName = ffmpegExe,
+                    Arguments = string.Format("-fflags nobuffer -flags low_delay -f h264 -r {0} -i \"{1}\" -vf fps={0},scale=960:-1 -f image2pipe -vcodec mjpeg -q:v 5 -", fps, h264Path),
+                    UseShellExecute = false,
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    CreateNoWindow = true,
+                    WorkingDirectory = _previewOutputDir
+                };
+
+                _ffmpegProcess = Process.Start(ffmpegPsi);
+                if (_ffmpegProcess == null)
+                {
+                    OnStatusChanged?.Invoke("[预览] FFmpeg 启动失败");
+                    return;
+                }
+
+                _ffmpegProcess.ErrorDataReceived += PreviewProcess_ErrorDataReceived;
+                _ffmpegProcess.BeginErrorReadLine();
+
+                ReadMjpegFrames(_ffmpegProcess.StandardOutput.BaseStream);
+            }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke("[预览] FFmpeg异常: " + ex.Message);
             }
         }
 
-        /// <summary>
-        /// 处理新预览帧文件
-        /// </summary>
-        private void PreviewFileWatcher_Created(object sender, FileSystemEventArgs e)
+        private void ReadMjpegFrames(Stream stream)
         {
-            if (!_isPreviewRunning)
-                return;
+            MemoryStream frameBuffer = new MemoryStream();
+            int prev = -1;
+            bool started = false;
 
             try
             {
-                // 等待文件写入完成
-                System.Threading.Thread.Sleep(50);
-
-                // 读取图像
-                using (FileStream fs = new FileStream(e.FullPath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (Image img = Image.FromStream(fs))
+                while (_isPreviewRunning)
                 {
-                    _previewFrameCount++;
-                    OnPreviewImage?.Invoke(new Bitmap(img));
-                }
+                    int b = stream.ReadByte();
+                    if (b < 0)
+                        break;
 
-                // 删除已处理的文件（避免堆积）
-                try { File.Delete(e.FullPath); } catch { }
+                    if (!started)
+                    {
+                        if (prev == 0xFF && b == 0xD8)
+                        {
+                            frameBuffer.SetLength(0);
+                            frameBuffer.WriteByte(0xFF);
+                            frameBuffer.WriteByte(0xD8);
+                            started = true;
+                        }
+                    }
+                    else
+                    {
+                        frameBuffer.WriteByte((byte)b);
+                        if (prev == 0xFF && b == 0xD9)
+                        {
+                            byte[] jpeg = frameBuffer.ToArray();
+                            using (MemoryStream ms = new MemoryStream(jpeg))
+                            using (Image img = Image.FromStream(ms))
+                            {
+                                _previewFrameCount++;
+                                OnPreviewImage?.Invoke(new Bitmap(img));
+                            }
+                            started = false;
+                            frameBuffer.SetLength(0);
+                        }
+                    }
+
+                    prev = b;
+                }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                OnStatusChanged?.Invoke("[预览] 读取视频帧失败: " + ex.Message);
+            }
+            finally
+            {
+                frameBuffer.Dispose();
+            }
         }
 
         /// <summary>
@@ -703,13 +794,7 @@ namespace Wit.Example_BWT901BLE.Camera
 
             string line = e.Data;
 
-            // 匹配: FRAME filename size quality
-            if (line.StartsWith("FRAME "))
-            {
-                // 帧已处理，由FileSystemWatcher处理图像加载
-            }
-            // 匹配: STATUS message
-            else if (line.StartsWith("STATUS "))
+            if (line.StartsWith("STATUS "))
             {
                 string status = line.Substring(7);
                 OnStatusChanged?.Invoke("[预览] " + status);

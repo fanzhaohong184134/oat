@@ -932,11 +932,26 @@ namespace Wit.Example_BWT901BLE
         /// <param name="e"></param>
         private void showPreviewButton_Click(object sender, EventArgs e)
         {
-            if (_previewForm != null && !_previewForm.Visible)
+            if (_cameraManager == null || _previewForm == null)
+                return;
+
+            if (_cameraManager.IsPreviewRunning)
+            {
+                _cameraManager.StopPreview();
+                showPreviewButton.Text = "显示预览窗口";
+                showPreviewButton.BackColor = SystemColors.Control;
+                return;
+            }
+
+            if (!_previewForm.Visible)
             {
                 _previewForm.Show();
-                _previewForm.BringToFront();
             }
+            _previewForm.BringToFront();
+
+            _cameraManager.StartPreview(15);
+            showPreviewButton.Text = "停止预览";
+            showPreviewButton.BackColor = Color.LightGreen;
         }
 
         /// <summary>
@@ -1044,6 +1059,19 @@ namespace Wit.Example_BWT901BLE
                 if (_previewForm != null)
                 {
                     _previewForm.UpdateStatus(status);
+                }
+
+                if ((status.Contains("启动预览失败") || status.Contains("未找到") || status.Contains("[预览错误]"))
+                    && showPreviewButton.Text == "停止预览")
+                {
+                    showPreviewButton.Text = "显示预览窗口";
+                    showPreviewButton.BackColor = SystemColors.Control;
+                }
+
+                if (!_cameraManager.IsPreviewRunning && showPreviewButton.Text == "停止预览")
+                {
+                    showPreviewButton.Text = "显示预览窗口";
+                    showPreviewButton.BackColor = SystemColors.Control;
                 }
             }
             catch { }
