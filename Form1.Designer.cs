@@ -70,7 +70,7 @@ namespace Wit.Example_BWT901BLE
             this.showPreviewButton = new System.Windows.Forms.Button();
             this.groupBoxCalibration = new System.Windows.Forms.GroupBox();
             this.magCalibrationButton = new System.Windows.Forms.Button();
-            this.spacerPanel = new System.Windows.Forms.Panel();
+            this.leftTableLayout = new System.Windows.Forms.TableLayoutPanel();
 
             // ── 挂起布局 ──
             ((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).BeginInit();
@@ -84,6 +84,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSensorData.SuspendLayout();
             this.groupBoxCameraLog.SuspendLayout();
             this.leftPanel.SuspendLayout();
+            this.leftTableLayout.SuspendLayout();
             this.groupBoxConnection.SuspendLayout();
             this.groupBoxSampling.SuspendLayout();
             this.groupBoxSettings.SuspendLayout();
@@ -168,14 +169,29 @@ namespace Wit.Example_BWT901BLE
             this.cameraLogRichTextBox.Text = "";
 
             // ================================================================
+            // leftTableLayout (按比例分配4个GroupBox的垂直空间)
+            // ================================================================
+            this.leftTableLayout.ColumnCount = 1;
+            this.leftTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.leftTableLayout.RowCount = 4;
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 22F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 15F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 23F));
+            this.leftTableLayout.Controls.Add(this.groupBoxConnection, 0, 0);
+            this.leftTableLayout.Controls.Add(this.groupBoxSampling, 0, 1);
+            this.leftTableLayout.Controls.Add(this.groupBoxSettings, 0, 2);
+            this.leftTableLayout.Controls.Add(this.groupBoxCalibration, 0, 3);
+            this.leftTableLayout.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.leftTableLayout.Location = new System.Drawing.Point(0, 0);
+            this.leftTableLayout.Name = "leftTableLayout";
+            this.leftTableLayout.Size = new System.Drawing.Size(260, 600);
+            this.leftTableLayout.TabIndex = 0;
+
+            // ================================================================
             // leftPanel (Dock=Fill, 在mainSplitContainer.Panel1内)
             // ================================================================
-            // Dock顺序：后添加的先Dock。Fill必须最先添加（最后Dock）
-            this.leftPanel.Controls.Add(this.spacerPanel);          // Fill - 填充剩余空间
-            this.leftPanel.Controls.Add(this.groupBoxSettings);     // Top - 自适应内容
-            this.leftPanel.Controls.Add(this.groupBoxCalibration);  // Bottom - 底部
-            this.leftPanel.Controls.Add(this.groupBoxSampling);     // Top
-            this.leftPanel.Controls.Add(this.groupBoxConnection);   // Top - 最先Dock
+            this.leftPanel.Controls.Add(this.leftTableLayout);
             this.leftPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.leftPanel.Location = new System.Drawing.Point(0, 0);
             this.leftPanel.Name = "leftPanel";
@@ -193,7 +209,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxConnection.Controls.Add(this.cameraStatusLight);
             this.groupBoxConnection.Controls.Add(this.cameraIpTextBox);
             this.groupBoxConnection.Controls.Add(this.cameraConnectButton);
-            this.groupBoxConnection.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupBoxConnection.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxConnection.Location = new System.Drawing.Point(0, 0);
             this.groupBoxConnection.Name = "groupBoxConnection";
             this.groupBoxConnection.Size = new System.Drawing.Size(260, 120);
@@ -203,7 +219,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── sensorLabel ──
             this.sensorLabel.AutoSize = true;
-            this.sensorLabel.Location = new System.Drawing.Point(10, 24);
+            this.sensorLabel.Location = new System.Drawing.Point(10, 20);
             this.sensorLabel.Name = "sensorLabel";
             this.sensorLabel.Size = new System.Drawing.Size(44, 13);
             this.sensorLabel.TabIndex = 0;
@@ -211,19 +227,21 @@ namespace Wit.Example_BWT901BLE
 
             // ── sensorStatusLight ──
             this.sensorStatusLight.BackColor = System.Drawing.Color.Gray;
-            this.sensorStatusLight.Location = new System.Drawing.Point(75, 22);
+            this.sensorStatusLight.Location = new System.Drawing.Point(75, 20);
             this.sensorStatusLight.Name = "sensorStatusLight";
             this.sensorStatusLight.Size = new System.Drawing.Size(16, 16);
             this.sensorStatusLight.TabIndex = 1;
 
             // ── sensorNameTextBox (蓝牙名称输入框，与相机IP对齐) ──
-            this.sensorNameTextBox.Location = new System.Drawing.Point(10, 45);
+            this.sensorNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.sensorNameTextBox.Location = new System.Drawing.Point(10, 44);
             this.sensorNameTextBox.Name = "sensorNameTextBox";
             this.sensorNameTextBox.Size = new System.Drawing.Size(120, 20);
             this.sensorNameTextBox.TabIndex = 2;
             this.sensorNameTextBox.Text = "WT901BLE68";
 
             // ── sensorConnectButton (连接按钮，与相机连接对齐) ──
+            this.sensorConnectButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
             this.sensorConnectButton.Location = new System.Drawing.Point(135, 43);
             this.sensorConnectButton.Name = "sensorConnectButton";
             this.sensorConnectButton.Size = new System.Drawing.Size(70, 24);
@@ -234,7 +252,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── cameraLabel ──
             this.cameraLabel.AutoSize = true;
-            this.cameraLabel.Location = new System.Drawing.Point(10, 80);
+            this.cameraLabel.Location = new System.Drawing.Point(10, 74);
             this.cameraLabel.Name = "cameraLabel";
             this.cameraLabel.Size = new System.Drawing.Size(32, 13);
             this.cameraLabel.TabIndex = 4;
@@ -242,12 +260,13 @@ namespace Wit.Example_BWT901BLE
 
             // ── cameraStatusLight ──
             this.cameraStatusLight.BackColor = System.Drawing.Color.Gray;
-            this.cameraStatusLight.Location = new System.Drawing.Point(75, 78);
+            this.cameraStatusLight.Location = new System.Drawing.Point(75, 74);
             this.cameraStatusLight.Name = "cameraStatusLight";
             this.cameraStatusLight.Size = new System.Drawing.Size(16, 16);
             this.cameraStatusLight.TabIndex = 5;
 
             // ── cameraIpTextBox ──
+            this.cameraIpTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.cameraIpTextBox.Location = new System.Drawing.Point(10, 98);
             this.cameraIpTextBox.Name = "cameraIpTextBox";
             this.cameraIpTextBox.Size = new System.Drawing.Size(120, 20);
@@ -255,7 +274,8 @@ namespace Wit.Example_BWT901BLE
             this.cameraIpTextBox.Text = "192.168.0.38";
 
             // ── cameraConnectButton ──
-            this.cameraConnectButton.Location = new System.Drawing.Point(135, 96);
+            this.cameraConnectButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cameraConnectButton.Location = new System.Drawing.Point(135, 97);
             this.cameraConnectButton.Name = "cameraConnectButton";
             this.cameraConnectButton.Size = new System.Drawing.Size(70, 24);
             this.cameraConnectButton.TabIndex = 7;
@@ -270,7 +290,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSampling.Controls.Add(this.cameraSamplingButton);
             this.groupBoxSampling.Controls.Add(this.logStatusLabel);
             this.groupBoxSampling.Controls.Add(this.logCountLabel);
-            this.groupBoxSampling.Dock = System.Windows.Forms.DockStyle.Top;
+            this.groupBoxSampling.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxSampling.Location = new System.Drawing.Point(0, 120);
             this.groupBoxSampling.Name = "groupBoxSampling";
             this.groupBoxSampling.Size = new System.Drawing.Size(260, 90);
@@ -279,7 +299,8 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSampling.Text = "采样记录";
 
             // ── imuSamplingButton ──
-            this.imuSamplingButton.Location = new System.Drawing.Point(10, 22);
+            this.imuSamplingButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.imuSamplingButton.Location = new System.Drawing.Point(10, 24);
             this.imuSamplingButton.Name = "imuSamplingButton";
             this.imuSamplingButton.Size = new System.Drawing.Size(100, 28);
             this.imuSamplingButton.TabIndex = 0;
@@ -288,7 +309,8 @@ namespace Wit.Example_BWT901BLE
             this.imuSamplingButton.Click += new System.EventHandler(this.imuSamplingButton_Click);
 
             // ── cameraSamplingButton ──
-            this.cameraSamplingButton.Location = new System.Drawing.Point(115, 22);
+            this.cameraSamplingButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cameraSamplingButton.Location = new System.Drawing.Point(115, 24);
             this.cameraSamplingButton.Name = "cameraSamplingButton";
             this.cameraSamplingButton.Size = new System.Drawing.Size(100, 28);
             this.cameraSamplingButton.TabIndex = 1;
@@ -298,7 +320,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── logStatusLabel ──
             this.logStatusLabel.AutoSize = true;
-            this.logStatusLabel.Location = new System.Drawing.Point(10, 55);
+            this.logStatusLabel.Location = new System.Drawing.Point(10, 60);
             this.logStatusLabel.Name = "logStatusLabel";
             this.logStatusLabel.Size = new System.Drawing.Size(79, 13);
             this.logStatusLabel.TabIndex = 2;
@@ -306,7 +328,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── logCountLabel ──
             this.logCountLabel.AutoSize = true;
-            this.logCountLabel.Location = new System.Drawing.Point(130, 55);
+            this.logCountLabel.Location = new System.Drawing.Point(130, 60);
             this.logCountLabel.Name = "logCountLabel";
             this.logCountLabel.Size = new System.Drawing.Size(79, 13);
             this.logCountLabel.TabIndex = 3;
@@ -329,14 +351,10 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSettings.Controls.Add(this.baseFileNameLabel);
             this.groupBoxSettings.Controls.Add(this.baseFileNameTextBox);
             this.groupBoxSettings.Controls.Add(this.showPreviewButton);
-            this.groupBoxSettings.AutoSize = true;
-            this.groupBoxSettings.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
-            this.groupBoxSettings.Dock = System.Windows.Forms.DockStyle.Top;
-            this.groupBoxSettings.MinimumSize = new System.Drawing.Size(0, 245);
-            this.groupBoxSettings.Padding = new System.Windows.Forms.Padding(3, 3, 3, 8);
+            this.groupBoxSettings.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxSettings.Location = new System.Drawing.Point(0, 210);
             this.groupBoxSettings.Name = "groupBoxSettings";
-            this.groupBoxSettings.Size = new System.Drawing.Size(260, 280);
+            this.groupBoxSettings.Size = new System.Drawing.Size(260, 240);
             this.groupBoxSettings.TabIndex = 2;
             this.groupBoxSettings.TabStop = false;
             this.groupBoxSettings.Text = "设置参数";
@@ -351,16 +369,17 @@ namespace Wit.Example_BWT901BLE
 
             // ── returnRateLabel ──
             this.returnRateLabel.AutoSize = true;
-            this.returnRateLabel.Location = new System.Drawing.Point(10, 40);
+            this.returnRateLabel.Location = new System.Drawing.Point(10, 42);
             this.returnRateLabel.Name = "returnRateLabel";
             this.returnRateLabel.Size = new System.Drawing.Size(79, 13);
             this.returnRateLabel.TabIndex = 1;
             this.returnRateLabel.Text = "回传速率(Hz)";
 
             // ── returnRateComboBox (选择即设置) ──
+            this.returnRateComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.returnRateComboBox.FormattingEnabled = true;
             this.returnRateComboBox.Items.AddRange(new object[] { "50", "10" });
-            this.returnRateComboBox.Location = new System.Drawing.Point(90, 37);
+            this.returnRateComboBox.Location = new System.Drawing.Point(90, 40);
             this.returnRateComboBox.Name = "returnRateComboBox";
             this.returnRateComboBox.Size = new System.Drawing.Size(120, 21);
             this.returnRateComboBox.TabIndex = 2;
@@ -369,16 +388,17 @@ namespace Wit.Example_BWT901BLE
 
             // ── bandWidthLabel ──
             this.bandWidthLabel.AutoSize = true;
-            this.bandWidthLabel.Location = new System.Drawing.Point(10, 65);
+            this.bandWidthLabel.Location = new System.Drawing.Point(10, 66);
             this.bandWidthLabel.Name = "bandWidthLabel";
             this.bandWidthLabel.Size = new System.Drawing.Size(55, 13);
             this.bandWidthLabel.TabIndex = 4;
             this.bandWidthLabel.Text = "带宽(Hz)";
 
             // ── bandWidthComboBox (选择即设置) ──
+            this.bandWidthComboBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
             this.bandWidthComboBox.FormattingEnabled = true;
             this.bandWidthComboBox.Items.AddRange(new object[] { "20", "256" });
-            this.bandWidthComboBox.Location = new System.Drawing.Point(90, 62);
+            this.bandWidthComboBox.Location = new System.Drawing.Point(90, 64);
             this.bandWidthComboBox.Name = "bandWidthComboBox";
             this.bandWidthComboBox.Size = new System.Drawing.Size(120, 21);
             this.bandWidthComboBox.TabIndex = 5;
@@ -387,7 +407,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── cameraSettingsHeaderLabel ──
             this.cameraSettingsHeaderLabel.AutoSize = true;
-            this.cameraSettingsHeaderLabel.Location = new System.Drawing.Point(10, 95);
+            this.cameraSettingsHeaderLabel.Location = new System.Drawing.Point(10, 94);
             this.cameraSettingsHeaderLabel.Name = "cameraSettingsHeaderLabel";
             this.cameraSettingsHeaderLabel.Size = new System.Drawing.Size(79, 13);
             this.cameraSettingsHeaderLabel.TabIndex = 9;
@@ -395,14 +415,15 @@ namespace Wit.Example_BWT901BLE
 
             // ── captureIntervalLabel ──
             this.captureIntervalLabel.AutoSize = true;
-            this.captureIntervalLabel.Location = new System.Drawing.Point(10, 115);
+            this.captureIntervalLabel.Location = new System.Drawing.Point(10, 116);
             this.captureIntervalLabel.Name = "captureIntervalLabel";
             this.captureIntervalLabel.Size = new System.Drawing.Size(67, 13);
             this.captureIntervalLabel.TabIndex = 13;
             this.captureIntervalLabel.Text = "拍照间隔(秒)";
 
             // ── captureIntervalTextBox ──
-            this.captureIntervalTextBox.Location = new System.Drawing.Point(100, 112);
+            this.captureIntervalTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.captureIntervalTextBox.Location = new System.Drawing.Point(100, 114);
             this.captureIntervalTextBox.Name = "captureIntervalTextBox";
             this.captureIntervalTextBox.Size = new System.Drawing.Size(60, 20);
             this.captureIntervalTextBox.TabIndex = 14;
@@ -417,13 +438,15 @@ namespace Wit.Example_BWT901BLE
             this.saveDirectoryLabel.Text = "保存目录";
 
             // ── saveDirectoryTextBox ──
-            this.saveDirectoryTextBox.Location = new System.Drawing.Point(10, 157);
+            this.saveDirectoryTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.saveDirectoryTextBox.Location = new System.Drawing.Point(10, 158);
             this.saveDirectoryTextBox.Name = "saveDirectoryTextBox";
             this.saveDirectoryTextBox.Size = new System.Drawing.Size(155, 20);
             this.saveDirectoryTextBox.TabIndex = 16;
 
             // ── browseSaveDirButton ──
-            this.browseSaveDirButton.Location = new System.Drawing.Point(170, 155);
+            this.browseSaveDirButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.browseSaveDirButton.Location = new System.Drawing.Point(170, 156);
             this.browseSaveDirButton.Name = "browseSaveDirButton";
             this.browseSaveDirButton.Size = new System.Drawing.Size(40, 24);
             this.browseSaveDirButton.TabIndex = 17;
@@ -440,14 +463,16 @@ namespace Wit.Example_BWT901BLE
             this.baseFileNameLabel.Text = "基准文件名";
 
             // ── baseFileNameTextBox ──
-            this.baseFileNameTextBox.Location = new System.Drawing.Point(90, 181);
+            this.baseFileNameTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.baseFileNameTextBox.Location = new System.Drawing.Point(90, 182);
             this.baseFileNameTextBox.Name = "baseFileNameTextBox";
             this.baseFileNameTextBox.Size = new System.Drawing.Size(120, 20);
             this.baseFileNameTextBox.TabIndex = 19;
             this.baseFileNameTextBox.Text = "photo";
 
             // ── showPreviewButton ──
-            this.showPreviewButton.Location = new System.Drawing.Point(10, 210);
+            this.showPreviewButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.showPreviewButton.Location = new System.Drawing.Point(10, 208);
             this.showPreviewButton.Name = "showPreviewButton";
             this.showPreviewButton.Size = new System.Drawing.Size(200, 25);
             this.showPreviewButton.TabIndex = 20;
@@ -461,7 +486,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxCalibration.Controls.Add(this.magCalibrationButton);
             this.groupBoxCalibration.Controls.Add(this.chipTimeCalibrationButton);
             this.groupBoxCalibration.Controls.Add(this.appliedCalibrationButton);
-            this.groupBoxCalibration.Dock = System.Windows.Forms.DockStyle.Bottom;
+            this.groupBoxCalibration.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxCalibration.Location = new System.Drawing.Point(0, 440);
             this.groupBoxCalibration.Name = "groupBoxCalibration";
             this.groupBoxCalibration.Size = new System.Drawing.Size(260, 120);
@@ -470,7 +495,8 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxCalibration.Text = "校准";
 
             // ── magCalibrationButton ──
-            this.magCalibrationButton.Location = new System.Drawing.Point(10, 22);
+            this.magCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.magCalibrationButton.Location = new System.Drawing.Point(10, 24);
             this.magCalibrationButton.Name = "magCalibrationButton";
             this.magCalibrationButton.Size = new System.Drawing.Size(220, 28);
             this.magCalibrationButton.TabIndex = 0;
@@ -479,7 +505,8 @@ namespace Wit.Example_BWT901BLE
             this.magCalibrationButton.Click += new System.EventHandler(this.magCalibrationButton_Click);
 
             // ── chipTimeCalibrationButton ──
-            this.chipTimeCalibrationButton.Location = new System.Drawing.Point(10, 55);
+            this.chipTimeCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.chipTimeCalibrationButton.Location = new System.Drawing.Point(10, 60);
             this.chipTimeCalibrationButton.Name = "chipTimeCalibrationButton";
             this.chipTimeCalibrationButton.Size = new System.Drawing.Size(220, 25);
             this.chipTimeCalibrationButton.TabIndex = 1;
@@ -488,22 +515,14 @@ namespace Wit.Example_BWT901BLE
             this.chipTimeCalibrationButton.Click += new System.EventHandler(this.chipTimeCalibrationButton_Click);
 
             // ── appliedCalibrationButton ──
-            this.appliedCalibrationButton.Location = new System.Drawing.Point(10, 85);
+            this.appliedCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.appliedCalibrationButton.Location = new System.Drawing.Point(10, 96);
             this.appliedCalibrationButton.Name = "appliedCalibrationButton";
             this.appliedCalibrationButton.Size = new System.Drawing.Size(220, 25);
             this.appliedCalibrationButton.TabIndex = 2;
             this.appliedCalibrationButton.Text = "加计校准";
             this.appliedCalibrationButton.UseVisualStyleBackColor = true;
             this.appliedCalibrationButton.Click += new System.EventHandler(this.appliedCalibrationButton_Click);
-
-            // ================================================================
-            // spacerPanel (填充GroupBox设置下方的剩余空间)
-            // ================================================================
-            this.spacerPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.spacerPanel.Location = new System.Drawing.Point(0, 460);
-            this.spacerPanel.Name = "spacerPanel";
-            this.spacerPanel.Size = new System.Drawing.Size(260, 0);
-            this.spacerPanel.TabIndex = 4;
 
             // ================================================================
             // GroupBox 边框加粗美化（Paint事件绘制）
@@ -535,6 +554,7 @@ namespace Wit.Example_BWT901BLE
             this.splitContainer.ResumeLayout(false);
             this.groupBoxSensorData.ResumeLayout(false);
             this.groupBoxCameraLog.ResumeLayout(false);
+            this.leftTableLayout.ResumeLayout(false);
             this.leftPanel.ResumeLayout(false);
             this.groupBoxConnection.ResumeLayout(false);
             this.groupBoxConnection.PerformLayout();
@@ -592,6 +612,6 @@ namespace Wit.Example_BWT901BLE
         private System.Windows.Forms.Button showPreviewButton;
         private System.Windows.Forms.GroupBox groupBoxCalibration;
         private System.Windows.Forms.Button magCalibrationButton;
-        private System.Windows.Forms.Panel spacerPanel;
+        private System.Windows.Forms.TableLayoutPanel leftTableLayout;
     }
 }

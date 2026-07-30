@@ -111,6 +111,12 @@ namespace Wit.Example_BWT901BLE
         private long _recordCount = 0;
 
         /// <summary>
+        /// 各GroupBox内控件的初始Y比例（用于垂直等比缩放）
+        /// </summary>
+        private Dictionary<Control, float> _controlYRatios = new Dictionary<Control, float>();
+        private Dictionary<GroupBox, int> _origGroupBoxHeights = new Dictionary<GroupBox, int>();
+
+        /// <summary>
         /// 构造
         /// Structure
         /// </summary>
@@ -148,12 +154,48 @@ namespace Wit.Example_BWT901BLE
             groupBoxCalibration.Paint += GroupBoxHeader_Paint;
             baseFileNameTextBox.Text = _cameraManager.BaseFileName;
 
+            // 记录各GroupBox内控件的初始Y位置比例，用于垂直等比缩放
+            InitLayoutRatios(groupBoxConnection);
+            InitLayoutRatios(groupBoxSampling);
+            InitLayoutRatios(groupBoxSettings);
+            InitLayoutRatios(groupBoxCalibration);
+            groupBoxConnection.Resize += GroupBox_Resize;
+            groupBoxSampling.Resize += GroupBox_Resize;
+            groupBoxSettings.Resize += GroupBox_Resize;
+            groupBoxCalibration.Resize += GroupBox_Resize;
+
             // 开启数据刷新线程
             // Enable data refresh thread
             Thread thread = new Thread(RefreshDataTh);
             thread.IsBackground = true;
             EnableRefreshDataTh = true;
             thread.Start();
+        }
+
+        private void InitLayoutRatios(GroupBox gb)
+        {
+            _origGroupBoxHeights[gb] = gb.Height;
+            foreach (Control c in gb.Controls)
+            {
+                _controlYRatios[c] = c.Location.Y / (float)gb.Height;
+            }
+        }
+
+        private void GroupBox_Resize(object sender, EventArgs e)
+        {
+            GroupBox gb = (GroupBox)sender;
+            if (!_origGroupBoxHeights.ContainsKey(gb)) return;
+            int origH = _origGroupBoxHeights[gb];
+            if (origH <= 0) return;
+            gb.SuspendLayout();
+            foreach (Control c in gb.Controls)
+            {
+                if (!_controlYRatios.ContainsKey(c)) continue;
+                float yRatio = _controlYRatios[c];
+                int newY = (int)(yRatio * gb.Height);
+                c.Location = new Point(c.Location.X, newY);
+            }
+            gb.ResumeLayout();
         }
 
         /// <summary>
