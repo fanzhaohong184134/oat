@@ -46,6 +46,7 @@
     <Reference Include="System.Deployment" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="System.Runtime.Serialization" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Windows">
@@ -60,6 +61,19 @@
     <Compile Include="Camera\FloatingPreviewForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="DataProcessing\Calibration\CalibrationConfig.cs" />
+    <Compile Include="DataProcessing\Calibration\CameraCalibrator.cs" />
+    <Compile Include="DataProcessing\Calibration\InstrumentCalibrator.cs" />
+    <Compile Include="DataProcessing\Calibration\MountingAngleCalibrator.cs" />
+    <Compile Include="DataProcessing\PostProcessing\ImuSample.cs" />
+    <Compile Include="DataProcessing\PostProcessing\CameraFrame.cs" />
+    <Compile Include="DataProcessing\PostProcessing\SyncedFrame.cs" />
+    <Compile Include="DataProcessing\PostProcessing\CsvParser.cs" />
+    <Compile Include="DataProcessing\PostProcessing\TimeSync.cs" />
+    <Compile Include="DataProcessing\PostProcessing\StabilityFilter.cs" />
+    <Compile Include="DataProcessing\PostProcessing\OffsetCalculator.cs" />
+    <Compile Include="DataProcessing\PostProcessing\ProcessingReport.cs" />
+    <Compile Include="DataProcessing\PostProcessing\PostProcessor.cs" />
     <Compile Include="Sampling\SamplingLogger.cs" />
     <Compile Include="Sampling\SamplingRecord.cs" />
     <Compile Include="ble5\Components\Bwt901bleProcessor.cs" />

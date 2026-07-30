@@ -3,6 +3,6 @@ namespace Wit.Example_BWT901BLE
 {
     static class GitVersion
     {
-        public const string CommitHash = "3786fed";
+        public const string CommitHash = "241d15b";
     }
 }

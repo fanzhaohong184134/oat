@@ -70,6 +70,18 @@ namespace Wit.Example_BWT901BLE
             this.showPreviewButton = new System.Windows.Forms.Button();
             this.groupBoxCalibration = new System.Windows.Forms.GroupBox();
             this.magCalibrationButton = new System.Windows.Forms.Button();
+            this.cameraCalibButton = new System.Windows.Forms.Button();
+            this.instrumentCalibButton = new System.Windows.Forms.Button();
+            this.mountingCalibButton = new System.Windows.Forms.Button();
+            this.groupBoxDataProcessing = new System.Windows.Forms.GroupBox();
+            this.imuCsvLabel = new System.Windows.Forms.Label();
+            this.imuCsvTextBox = new System.Windows.Forms.TextBox();
+            this.browseImuCsvButton = new System.Windows.Forms.Button();
+            this.cameraCsvLabel = new System.Windows.Forms.Label();
+            this.cameraCsvTextBox = new System.Windows.Forms.TextBox();
+            this.browseCameraCsvButton = new System.Windows.Forms.Button();
+            this.processButton = new System.Windows.Forms.Button();
+            this.reportLabel = new System.Windows.Forms.Label();
             this.leftTableLayout = new System.Windows.Forms.TableLayoutPanel();
             this.versionLabel = new System.Windows.Forms.Label();
 
@@ -90,6 +102,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSampling.SuspendLayout();
             this.groupBoxSettings.SuspendLayout();
             this.groupBoxCalibration.SuspendLayout();
+            this.groupBoxDataProcessing.SuspendLayout();
             this.SuspendLayout();
 
             // ================================================================
@@ -174,15 +187,17 @@ namespace Wit.Example_BWT901BLE
             // ================================================================
             this.leftTableLayout.ColumnCount = 1;
             this.leftTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
-            this.leftTableLayout.RowCount = 4;
+            this.leftTableLayout.RowCount = 5;
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 18F));
             this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 22F));
-            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 15F));
-            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 40F));
-            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 23F));
             this.leftTableLayout.Controls.Add(this.groupBoxConnection, 0, 0);
             this.leftTableLayout.Controls.Add(this.groupBoxSampling, 0, 1);
             this.leftTableLayout.Controls.Add(this.groupBoxSettings, 0, 2);
             this.leftTableLayout.Controls.Add(this.groupBoxCalibration, 0, 3);
+            this.leftTableLayout.Controls.Add(this.groupBoxDataProcessing, 0, 4);
             this.leftTableLayout.Dock = System.Windows.Forms.DockStyle.Fill;
             this.leftTableLayout.Location = new System.Drawing.Point(0, 0);
             this.leftTableLayout.Name = "leftTableLayout";
@@ -482,11 +497,14 @@ namespace Wit.Example_BWT901BLE
             this.showPreviewButton.Click += new System.EventHandler(this.showPreviewButton_Click);
 
             // ================================================================
-            // groupBoxCalibration (Height=120, 包含三个校准按钮)
+            // groupBoxCalibration (包含校准按钮)
             // ================================================================
             this.groupBoxCalibration.Controls.Add(this.magCalibrationButton);
             this.groupBoxCalibration.Controls.Add(this.chipTimeCalibrationButton);
             this.groupBoxCalibration.Controls.Add(this.appliedCalibrationButton);
+            this.groupBoxCalibration.Controls.Add(this.cameraCalibButton);
+            this.groupBoxCalibration.Controls.Add(this.instrumentCalibButton);
+            this.groupBoxCalibration.Controls.Add(this.mountingCalibButton);
             this.groupBoxCalibration.Dock = System.Windows.Forms.DockStyle.Fill;
             this.groupBoxCalibration.Location = new System.Drawing.Point(0, 440);
             this.groupBoxCalibration.Name = "groupBoxCalibration";
@@ -497,33 +515,151 @@ namespace Wit.Example_BWT901BLE
 
             // ── magCalibrationButton ──
             this.magCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.magCalibrationButton.Location = new System.Drawing.Point(10, 24);
+            this.magCalibrationButton.Location = new System.Drawing.Point(10, 20);
             this.magCalibrationButton.Name = "magCalibrationButton";
-            this.magCalibrationButton.Size = new System.Drawing.Size(220, 28);
+            this.magCalibrationButton.Size = new System.Drawing.Size(105, 25);
             this.magCalibrationButton.TabIndex = 0;
             this.magCalibrationButton.Text = "磁场校准";
             this.magCalibrationButton.UseVisualStyleBackColor = false;
             this.magCalibrationButton.Click += new System.EventHandler(this.magCalibrationButton_Click);
 
             // ── chipTimeCalibrationButton ──
-            this.chipTimeCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.chipTimeCalibrationButton.Location = new System.Drawing.Point(10, 60);
+            this.chipTimeCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.chipTimeCalibrationButton.Location = new System.Drawing.Point(120, 20);
             this.chipTimeCalibrationButton.Name = "chipTimeCalibrationButton";
-            this.chipTimeCalibrationButton.Size = new System.Drawing.Size(220, 25);
+            this.chipTimeCalibrationButton.Size = new System.Drawing.Size(105, 25);
             this.chipTimeCalibrationButton.TabIndex = 1;
-            this.chipTimeCalibrationButton.Text = "ChipTime 校准";
+            this.chipTimeCalibrationButton.Text = "ChipTime校准";
             this.chipTimeCalibrationButton.UseVisualStyleBackColor = true;
             this.chipTimeCalibrationButton.Click += new System.EventHandler(this.chipTimeCalibrationButton_Click);
 
             // ── appliedCalibrationButton ──
             this.appliedCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.appliedCalibrationButton.Location = new System.Drawing.Point(10, 96);
+            this.appliedCalibrationButton.Location = new System.Drawing.Point(10, 50);
             this.appliedCalibrationButton.Name = "appliedCalibrationButton";
-            this.appliedCalibrationButton.Size = new System.Drawing.Size(220, 25);
+            this.appliedCalibrationButton.Size = new System.Drawing.Size(105, 25);
             this.appliedCalibrationButton.TabIndex = 2;
             this.appliedCalibrationButton.Text = "加计校准";
             this.appliedCalibrationButton.UseVisualStyleBackColor = true;
             this.appliedCalibrationButton.Click += new System.EventHandler(this.appliedCalibrationButton_Click);
+
+            // ── cameraCalibButton ──
+            this.cameraCalibButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.cameraCalibButton.Location = new System.Drawing.Point(120, 50);
+            this.cameraCalibButton.Name = "cameraCalibButton";
+            this.cameraCalibButton.Size = new System.Drawing.Size(105, 25);
+            this.cameraCalibButton.TabIndex = 3;
+            this.cameraCalibButton.Text = "相机标定";
+            this.cameraCalibButton.UseVisualStyleBackColor = true;
+            this.cameraCalibButton.Click += new System.EventHandler(this.cameraCalibButton_Click);
+
+            // ── instrumentCalibButton ──
+            this.instrumentCalibButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.instrumentCalibButton.Location = new System.Drawing.Point(10, 80);
+            this.instrumentCalibButton.Name = "instrumentCalibButton";
+            this.instrumentCalibButton.Size = new System.Drawing.Size(105, 25);
+            this.instrumentCalibButton.TabIndex = 4;
+            this.instrumentCalibButton.Text = "仪器标定";
+            this.instrumentCalibButton.UseVisualStyleBackColor = true;
+            this.instrumentCalibButton.Click += new System.EventHandler(this.instrumentCalibButton_Click);
+
+            // ── mountingCalibButton ──
+            this.mountingCalibButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.mountingCalibButton.Location = new System.Drawing.Point(120, 80);
+            this.mountingCalibButton.Name = "mountingCalibButton";
+            this.mountingCalibButton.Size = new System.Drawing.Size(105, 25);
+            this.mountingCalibButton.TabIndex = 5;
+            this.mountingCalibButton.Text = "安装角标定";
+            this.mountingCalibButton.UseVisualStyleBackColor = true;
+            this.mountingCalibButton.Click += new System.EventHandler(this.mountingCalibButton_Click);
+
+            // ================================================================
+            // groupBoxDataProcessing (数据处理)
+            // ================================================================
+            this.groupBoxDataProcessing.Controls.Add(this.imuCsvLabel);
+            this.groupBoxDataProcessing.Controls.Add(this.imuCsvTextBox);
+            this.groupBoxDataProcessing.Controls.Add(this.browseImuCsvButton);
+            this.groupBoxDataProcessing.Controls.Add(this.cameraCsvLabel);
+            this.groupBoxDataProcessing.Controls.Add(this.cameraCsvTextBox);
+            this.groupBoxDataProcessing.Controls.Add(this.browseCameraCsvButton);
+            this.groupBoxDataProcessing.Controls.Add(this.processButton);
+            this.groupBoxDataProcessing.Controls.Add(this.reportLabel);
+            this.groupBoxDataProcessing.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.groupBoxDataProcessing.Location = new System.Drawing.Point(0, 560);
+            this.groupBoxDataProcessing.Name = "groupBoxDataProcessing";
+            this.groupBoxDataProcessing.Size = new System.Drawing.Size(260, 140);
+            this.groupBoxDataProcessing.TabIndex = 4;
+            this.groupBoxDataProcessing.TabStop = false;
+            this.groupBoxDataProcessing.Text = "数据处理";
+
+            // ── imuCsvLabel ──
+            this.imuCsvLabel.AutoSize = true;
+            this.imuCsvLabel.Location = new System.Drawing.Point(10, 20);
+            this.imuCsvLabel.Name = "imuCsvLabel";
+            this.imuCsvLabel.Size = new System.Drawing.Size(55, 13);
+            this.imuCsvLabel.TabIndex = 0;
+            this.imuCsvLabel.Text = "IMU CSV";
+
+            // ── imuCsvTextBox ──
+            this.imuCsvTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.imuCsvTextBox.Location = new System.Drawing.Point(70, 18);
+            this.imuCsvTextBox.Name = "imuCsvTextBox";
+            this.imuCsvTextBox.Size = new System.Drawing.Size(120, 20);
+            this.imuCsvTextBox.TabIndex = 1;
+
+            // ── browseImuCsvButton ──
+            this.browseImuCsvButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.browseImuCsvButton.Location = new System.Drawing.Point(195, 17);
+            this.browseImuCsvButton.Name = "browseImuCsvButton";
+            this.browseImuCsvButton.Size = new System.Drawing.Size(30, 22);
+            this.browseImuCsvButton.TabIndex = 2;
+            this.browseImuCsvButton.Text = "...";
+            this.browseImuCsvButton.UseVisualStyleBackColor = true;
+            this.browseImuCsvButton.Click += new System.EventHandler(this.browseImuCsvButton_Click);
+
+            // ── cameraCsvLabel ──
+            this.cameraCsvLabel.AutoSize = true;
+            this.cameraCsvLabel.Location = new System.Drawing.Point(10, 44);
+            this.cameraCsvLabel.Name = "cameraCsvLabel";
+            this.cameraCsvLabel.Size = new System.Drawing.Size(55, 13);
+            this.cameraCsvLabel.TabIndex = 3;
+            this.cameraCsvLabel.Text = "相机 CSV";
+
+            // ── cameraCsvTextBox ──
+            this.cameraCsvTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.cameraCsvTextBox.Location = new System.Drawing.Point(70, 42);
+            this.cameraCsvTextBox.Name = "cameraCsvTextBox";
+            this.cameraCsvTextBox.Size = new System.Drawing.Size(120, 20);
+            this.cameraCsvTextBox.TabIndex = 4;
+
+            // ── browseCameraCsvButton ──
+            this.browseCameraCsvButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.browseCameraCsvButton.Location = new System.Drawing.Point(195, 41);
+            this.browseCameraCsvButton.Name = "browseCameraCsvButton";
+            this.browseCameraCsvButton.Size = new System.Drawing.Size(30, 22);
+            this.browseCameraCsvButton.TabIndex = 5;
+            this.browseCameraCsvButton.Text = "...";
+            this.browseCameraCsvButton.UseVisualStyleBackColor = true;
+            this.browseCameraCsvButton.Click += new System.EventHandler(this.browseCameraCsvButton_Click);
+
+            // ── processButton ──
+            this.processButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.processButton.Location = new System.Drawing.Point(10, 68);
+            this.processButton.Name = "processButton";
+            this.processButton.Size = new System.Drawing.Size(215, 25);
+            this.processButton.TabIndex = 6;
+            this.processButton.Text = "开始处理";
+            this.processButton.UseVisualStyleBackColor = true;
+            this.processButton.Click += new System.EventHandler(this.processButton_Click);
+
+            // ── reportLabel ──
+            this.reportLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.reportLabel.Location = new System.Drawing.Point(10, 96);
+            this.reportLabel.Name = "reportLabel";
+            this.reportLabel.Size = new System.Drawing.Size(215, 40);
+            this.reportLabel.TabIndex = 7;
+            this.reportLabel.Text = "等待处理...";
+            this.reportLabel.ForeColor = System.Drawing.Color.Gray;
 
             // ================================================================
             // GroupBox 边框加粗美化（Paint事件绘制）
@@ -532,6 +668,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSampling.Paint += new System.Windows.Forms.PaintEventHandler(this.GroupBoxBorderPaint);
             this.groupBoxSettings.Paint += new System.Windows.Forms.PaintEventHandler(this.GroupBoxBorderPaint);
             this.groupBoxCalibration.Paint += new System.Windows.Forms.PaintEventHandler(this.GroupBoxBorderPaint);
+            this.groupBoxDataProcessing.Paint += new System.Windows.Forms.PaintEventHandler(this.GroupBoxBorderPaint);
 
             // ================================================================
             // versionLabel (右下角版本号)
@@ -539,7 +676,7 @@ namespace Wit.Example_BWT901BLE
             this.versionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
             this.versionLabel.AutoSize = true;
             this.versionLabel.ForeColor = System.Drawing.Color.Gray;
-            this.versionLabel.Location = new System.Drawing.Point(940, 584);
+            this.versionLabel.Location = new System.Drawing.Point(940, 764);
             this.versionLabel.Name = "versionLabel";
             this.versionLabel.Size = new System.Drawing.Size(80, 13);
             this.versionLabel.TabIndex = 3;
@@ -550,11 +687,11 @@ namespace Wit.Example_BWT901BLE
             // ================================================================
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1024, 600);
+            this.ClientSize = new System.Drawing.Size(1024, 780);
             this.Controls.Add(this.versionLabel);
             this.Controls.Add(this.mainSplitContainer);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.MinimumSize = new System.Drawing.Size(800, 500);
+            this.MinimumSize = new System.Drawing.Size(800, 680);
             this.Name = "Form1";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "调平对中数字调节仪";
@@ -577,6 +714,8 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSettings.ResumeLayout(false);
             this.groupBoxSettings.PerformLayout();
             this.groupBoxCalibration.ResumeLayout(false);
+            this.groupBoxDataProcessing.ResumeLayout(false);
+            this.groupBoxDataProcessing.PerformLayout();
             this.mainSplitContainer.Panel1.ResumeLayout(false);
             this.mainSplitContainer.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).EndInit();
@@ -626,6 +765,18 @@ namespace Wit.Example_BWT901BLE
         private System.Windows.Forms.Button showPreviewButton;
         private System.Windows.Forms.GroupBox groupBoxCalibration;
         private System.Windows.Forms.Button magCalibrationButton;
+        private System.Windows.Forms.Button cameraCalibButton;
+        private System.Windows.Forms.Button instrumentCalibButton;
+        private System.Windows.Forms.Button mountingCalibButton;
+        private System.Windows.Forms.GroupBox groupBoxDataProcessing;
+        private System.Windows.Forms.Label imuCsvLabel;
+        private System.Windows.Forms.TextBox imuCsvTextBox;
+        private System.Windows.Forms.Button browseImuCsvButton;
+        private System.Windows.Forms.Label cameraCsvLabel;
+        private System.Windows.Forms.TextBox cameraCsvTextBox;
+        private System.Windows.Forms.Button browseCameraCsvButton;
+        private System.Windows.Forms.Button processButton;
+        private System.Windows.Forms.Label reportLabel;
         private System.Windows.Forms.TableLayoutPanel leftTableLayout;
         private System.Windows.Forms.Label versionLabel;
     }

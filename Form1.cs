@@ -15,6 +15,8 @@ using Wit.Bluetooth.WinBlue.Utils;
 using Wit.Bluetooth.WinBlue.Interface;
 using Wit.Example_BWT901BLE.Sampling;
 using Wit.Example_BWT901BLE.Camera;
+using Wit.Example_BWT901BLE.DataProcessing.Calibration;
+using Wit.Example_BWT901BLE.DataProcessing.PostProcessing;
 
 namespace Wit.Example_BWT901BLE
 {   
@@ -156,6 +158,7 @@ namespace Wit.Example_BWT901BLE
             groupBoxSampling.Paint += GroupBoxHeader_Paint;
             groupBoxSettings.Paint += GroupBoxHeader_Paint;
             groupBoxCalibration.Paint += GroupBoxHeader_Paint;
+            groupBoxDataProcessing.Paint += GroupBoxHeader_Paint;
             baseFileNameTextBox.Text = _cameraManager.BaseFileName;
 
             // 记录各GroupBox内控件的初始Y位置比例，用于垂直等比缩放
@@ -163,10 +166,12 @@ namespace Wit.Example_BWT901BLE
             InitLayoutRatios(groupBoxSampling);
             InitLayoutRatios(groupBoxSettings);
             InitLayoutRatios(groupBoxCalibration);
+            InitLayoutRatios(groupBoxDataProcessing);
             groupBoxConnection.Resize += GroupBox_Resize;
             groupBoxSampling.Resize += GroupBox_Resize;
             groupBoxSettings.Resize += GroupBox_Resize;
             groupBoxCalibration.Resize += GroupBox_Resize;
+            groupBoxDataProcessing.Resize += GroupBox_Resize;
 
             // 开启数据刷新线程
             // Enable data refresh thread
@@ -1229,6 +1234,176 @@ namespace Wit.Example_BWT901BLE
                     // 防止线程因异常退出
                     Thread.Sleep(500);
                 }
+            }
+        }
+
+        // ── 相机标定 ──
+        private void cameraCalibButton_Click(object sender, EventArgs e)
+        {
+            string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CameraCalibration.exe");
+            if (File.Exists(exePath))
+            {
+                Process.Start(exePath);
+            }
+            else
+            {
+                MessageBox.Show("未找到 CameraCalibration.exe，请先编译相机标定项目。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        // ── 仪器标定（航向偏差） ──
+        private void instrumentCalibButton_Click(object sender, EventArgs e)
+        {
+            string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "InstrumentCalibration.exe");
+            if (File.Exists(exePath))
+            {
+                Process.Start(exePath);
+            }
+            else
+            {
+                MessageBox.Show("未找到 InstrumentCalibration.exe，请先编译仪器标定项目。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
+        }
+
+        // ── 浏览IMU CSV文件 ──
+        private void browseImuCsvButton_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog dlg = new OpenFileDialog())
+            {
+                dlg.Title = "选择IMU采样CSV文件";
+                dlg.Filter = "CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
+                dlg.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    imuCsvTextBox.Text = dlg.FileName;
+            }
+        }
+
+        // ── 浏览相机CSV文件 ──
+        private void browseCameraCsvButton_Click(object sender, EventArgs e)
+        {
+            using (OpenFileDialog dlg = new OpenFileDialog())
+            {
+                dlg.Title = "选择相机采样CSV文件";
+                dlg.Filter = "CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
+                dlg.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "camera_captures", "logs");
+                if (dlg.ShowDialog() == DialogResult.OK)
+                    cameraCsvTextBox.Text = dlg.FileName;
+            }
+        }
+
+        // ── 安装角标定 ──
+        private void mountingCalibButton_Click(object sender, EventArgs e)
+        {
+            if (FoundDeviceDict.Count == 0)
+            {
+                MessageBox.Show("请先连接传感器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            var firstDevice = FoundDeviceDict.ElementAt(0).Value;
+            double angleX = firstDevice.GetDeviceData(WitSensorKey.AngleX) ?? 0;
+            double angleY = firstDevice.GetDeviceData(WitSensorKey.AngleY) ?? 0;
+
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "calibration_config.json");
+            CalibrationConfig config;
+            if (File.Exists(configPath))
+            {
+                try { config = CalibrationConfig.Load(configPath); }
+                catch { config = new CalibrationConfig(); }
+            }
+            else
+            {
+                config = new CalibrationConfig();
+            }
+
+            double fx = config.Fx > 0 ? config.Fx : 500;
+            double fy = config.Fy > 0 ? config.Fy : 500;
+            double cx = config.Cx > 0 ? config.Cx : 320;
+            double cy = config.Cy > 0 ? config.Cy : 240;
+
+            // 使用图像中心作为靶标位置占位（实际应从照片检测）
+            double uActual = cx;
+            double vActual = cy;
+
+            var calibrator = new MountingAngleCalibrator();
+            double deltaPitch, deltaRoll;
+            calibrator.Calibrate(angleX, angleY, uActual, vActual, fx, fy, cx, cy, out deltaPitch, out deltaRoll);
+
+            config.DeltaPitch = deltaPitch;
+            config.DeltaRoll = deltaRoll;
+            config.Save(configPath);
+
+            MessageBox.Show(
+                string.Format("安装角标定完成!\n\nIMU当前: AngleX={0:F3}° AngleY={1:F3}°\n\nδ_pitch = {2:F4}°\nδ_roll  = {3:F4}°\n\n已保存到 calibration_config.json",
+                    angleX, angleY, deltaPitch, deltaRoll),
+                "安装角标定",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+        }
+
+        // ── 开始数据处理 ──
+        private async void processButton_Click(object sender, EventArgs e)
+        {
+            string imuCsv = imuCsvTextBox.Text.Trim();
+            string cameraCsv = cameraCsvTextBox.Text.Trim();
+
+            if (string.IsNullOrEmpty(imuCsv) || string.IsNullOrEmpty(cameraCsv))
+            {
+                MessageBox.Show("请先选择IMU和相机的CSV文件", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // 加载或创建默认校准配置
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "calibration_config.json");
+            CalibrationConfig config;
+            if (File.Exists(configPath))
+            {
+                try { config = CalibrationConfig.Load(configPath); }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("加载校准配置失败: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    return;
+                }
+            }
+            else
+            {
+                MessageBox.Show("未找到 calibration_config.json，将使用默认参数。\n请先运行相机标定和仪器标定。",
+                    "提示", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                config = new CalibrationConfig();
+            }
+
+            processButton.Enabled = false;
+            processButton.Text = "处理中...";
+            reportLabel.Text = "处理中...";
+            reportLabel.ForeColor = Color.Black;
+
+            try
+            {
+                var processor = new PostProcessor();
+                ProcessingReport report = await Task.Run(() => processor.Run(imuCsv, cameraCsv, config));
+
+                // 显示核心报告
+                reportLabel.Text = string.Format("ΔE={0:+0.00;-0.00}mm ΔN={1:+0.00;-0.00}mm\n偏移={2:F2}mm 方位={3:F1}° 有效帧={4}/{5}",
+                    report.DeltaE, report.DeltaN, report.DeltaH, report.Azimuth, report.ValidFrames, report.TotalFrames);
+                reportLabel.ForeColor = Color.DarkGreen;
+
+                // 保存报告
+                string reportDir = Path.GetDirectoryName(imuCsv);
+                string reportPath = Path.Combine(reportDir, "correction_report_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt");
+                report.SaveToFile(reportPath);
+
+                MessageBox.Show(report.ToSummary() + "\n\n报告已保存至:\n" + reportPath, "处理完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                reportLabel.Text = "处理失败";
+                reportLabel.ForeColor = Color.Red;
+                MessageBox.Show("数据处理失败: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+            finally
+            {
+                processButton.Enabled = true;
+                processButton.Text = "开始处理";
             }
         }
     }
