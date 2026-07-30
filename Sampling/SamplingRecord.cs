@@ -105,7 +105,7 @@ namespace Wit.Example_BWT901BLE.Sampling
         {
             return string.Join(",",
                 SampleNo,
-                Timestamp.ToString("yyyy/MM/dd HH:mm:ss.fff"),
+                "=\"" + Timestamp.ToString("yyyy/MM/dd HH:mm:ss.fff") + "\"",
                 ElapsedMs.ToString("F3"),
                 EscapeCsv(ChipTime ?? ""),
                 FormatNullable(AccX),
