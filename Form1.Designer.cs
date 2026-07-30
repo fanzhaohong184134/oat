@@ -511,7 +511,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxCalibration.Size = new System.Drawing.Size(260, 120);
             this.groupBoxCalibration.TabIndex = 3;
             this.groupBoxCalibration.TabStop = false;
-            this.groupBoxCalibration.Text = "校准";
+            this.groupBoxCalibration.Text = "校准与标定";
 
             // ── magCalibrationButton ──
             this.magCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
@@ -559,7 +559,7 @@ namespace Wit.Example_BWT901BLE
             this.instrumentCalibButton.Name = "instrumentCalibButton";
             this.instrumentCalibButton.Size = new System.Drawing.Size(105, 25);
             this.instrumentCalibButton.TabIndex = 4;
-            this.instrumentCalibButton.Text = "仪器标定";
+            this.instrumentCalibButton.Text = "航向标定";
             this.instrumentCalibButton.UseVisualStyleBackColor = true;
             this.instrumentCalibButton.Click += new System.EventHandler(this.instrumentCalibButton_Click);
 
