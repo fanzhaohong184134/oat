@@ -71,6 +71,7 @@
     <Compile Include="Form1.Designer.cs">
       <DependentUpon>Form1.cs</DependentUpon>
     </Compile>
+    <Compile Include="GitVersion.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WitSdk\Device\Connector\Entity\SerialPortConfig.cs" />
@@ -178,6 +179,9 @@
     <Folder Include="_DII\" />
   </ItemGroup>
   <!-- 编译 demo_jpeg_app.exe (PreBuildEvent) -->
+  <Target Name="GenerateGitVersion" BeforeTargets="CoreCompile">
+    <Exec Command="&quot;$(ProjectDir)generate_version.bat&quot;" IgnoreExitCode="true" />
+  </Target>
   <Target Name="BuildCameraApp" BeforeTargets="PreBuildEvent">
     <Exec Command="&quot;$(ProjectDir)camera\build_camera.bat&quot;" IgnoreExitCode="true" EchoOff="false" />
   </Target>

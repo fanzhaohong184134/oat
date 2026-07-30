@@ -133,6 +133,10 @@ namespace Wit.Example_BWT901BLE
         /// <param name="e"></param>
         private void Form1_Load(object sender, EventArgs e)
         {
+            // 版本号
+            string ver = string.IsNullOrEmpty(GitVersion.CommitHash) ? "V1.0" : "V1.0-" + GitVersion.CommitHash;
+            versionLabel.Text = ver;
+
             // 初始化相机管理器
             _cameraManager = new CameraManager();
             _cameraManager.OnCaptureLog += _cameraManager_OnCaptureLog;

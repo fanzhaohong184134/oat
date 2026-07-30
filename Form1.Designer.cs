@@ -71,6 +71,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxCalibration = new System.Windows.Forms.GroupBox();
             this.magCalibrationButton = new System.Windows.Forms.Button();
             this.leftTableLayout = new System.Windows.Forms.TableLayoutPanel();
+            this.versionLabel = new System.Windows.Forms.Label();
 
             // ── 挂起布局 ──
             ((System.ComponentModel.ISupportInitialize)(this.mainSplitContainer)).BeginInit();
@@ -533,11 +534,24 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxCalibration.Paint += new System.Windows.Forms.PaintEventHandler(this.GroupBoxBorderPaint);
 
             // ================================================================
+            // versionLabel (右下角版本号)
+            // ================================================================
+            this.versionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.versionLabel.AutoSize = true;
+            this.versionLabel.ForeColor = System.Drawing.Color.Gray;
+            this.versionLabel.Location = new System.Drawing.Point(940, 584);
+            this.versionLabel.Name = "versionLabel";
+            this.versionLabel.Size = new System.Drawing.Size(80, 13);
+            this.versionLabel.TabIndex = 3;
+            this.versionLabel.Text = "";
+
+            // ================================================================
             // Form1
             // ================================================================
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1024, 600);
+            this.Controls.Add(this.versionLabel);
             this.Controls.Add(this.mainSplitContainer);
             this.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.MinimumSize = new System.Drawing.Size(800, 500);
@@ -613,5 +627,6 @@ namespace Wit.Example_BWT901BLE
         private System.Windows.Forms.GroupBox groupBoxCalibration;
         private System.Windows.Forms.Button magCalibrationButton;
         private System.Windows.Forms.TableLayoutPanel leftTableLayout;
+        private System.Windows.Forms.Label versionLabel;
     }
 }
