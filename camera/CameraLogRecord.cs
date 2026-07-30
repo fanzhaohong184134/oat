@@ -57,7 +57,7 @@ namespace Wit.Example_BWT901BLE.Camera
         {
             return string.Join(",",
                 CaptureNo,
-                Timestamp.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                Timestamp.ToString("yyyy/MM/dd HH:mm:ss.fff"),
                 ElapsedMs.ToString("F3"),
                 EscapeCsv(FileName ?? ""),
                 EscapeCsv(FilePath ?? ""),

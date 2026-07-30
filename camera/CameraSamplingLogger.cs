@@ -92,6 +92,7 @@ namespace Wit.Example_BWT901BLE.Camera
                 }
 
                 record.CaptureNo = _sampleNo;
+                record.Timestamp = DateTime.Now;
                 record.ElapsedMs = _stopwatch.Elapsed.TotalMilliseconds;
 
                 _writer.WriteLine(record.ToCsvLine());
