@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CameraCalibrationApp", "Dat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InstrumentCalibrationApp", "DataProcessing\Calibration\InstrumentCalibrationApp\InstrumentCalibrationApp.csproj", "{A1B2C3D4-1111-2222-3333-555566667777}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MountingCalibrationApp", "DataProcessing\Calibration\MountingCalibrationApp\MountingCalibrationApp.csproj", "{A1B2C3D4-1111-2222-3333-777788889999}"
+EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PostProcessingApp", "DataProcessing\PostProcessing\PostProcessingApp\PostProcessingApp.csproj", "{A1B2C3D4-1111-2222-3333-666677778888}"
 EndProject
 Global
@@ -41,6 +43,10 @@ Global
 		{A1B2C3D4-1111-2222-3333-555566667777}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-1111-2222-3333-555566667777}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1B2C3D4-1111-2222-3333-555566667777}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-777788889999}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-777788889999}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B2C3D4-1111-2222-3333-777788889999}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B2C3D4-1111-2222-3333-777788889999}.Release|Any CPU.Build.0 = Release|Any CPU
 		{A1B2C3D4-1111-2222-3333-666677778888}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{A1B2C3D4-1111-2222-3333-666677778888}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1B2C3D4-1111-2222-3333-666677778888}.Release|Any CPU.ActiveCfg = Release|Any CPU

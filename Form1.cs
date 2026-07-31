@@ -15,6 +15,7 @@ using Wit.Bluetooth.WinBlue.Utils;
 using Wit.Bluetooth.WinBlue.Interface;
 using Wit.Example_BWT901BLE.Sampling;
 using Wit.Example_BWT901BLE.Camera;
+using Wit.Example_BWT901BLE.CalibrationPanels;
 using Wit.Example_BWT901BLE.DataProcessing.Calibration;
 using Wit.Example_BWT901BLE.DataProcessing.PostProcessing;
 
@@ -93,6 +94,11 @@ namespace Wit.Example_BWT901BLE
         private bool _isCameraSampling = false;
 
         /// <summary>
+        /// 相机是否已连接通过测试
+        /// </summary>
+        private bool _isCameraConnected = false;
+
+        /// <summary>
         /// 是否正在磁场校准
         /// </summary>
         private bool _isMagCalibrating = false;
@@ -137,7 +143,17 @@ namespace Wit.Example_BWT901BLE
         {
             // 版本号
             string ver = string.IsNullOrEmpty(GitVersion.CommitHash) ? "V1.0" : "V1.0-" + GitVersion.CommitHash;
-            versionLabel.Text = ver;
+            this.Text = "数字对中调节仪-" + ver;
+            versionLabel.Text = string.Empty;
+            versionLabel.Visible = false;
+
+            // 初始化 device_info 目录与默认设备编号
+            var pathService = new CalibrationPathService(AppDomain.CurrentDomain.BaseDirectory);
+            string deviceId = pathService.EnsureAndPersistDeviceId(pathService.GetDefaultDeviceId());
+            string inputDir, outputDir;
+            pathService.EnsureCalibrationDirs(deviceId, "camera_calibration", out inputDir, out outputDir);
+            pathService.EnsureCalibrationDirs(deviceId, "mounting_calibration", out inputDir, out outputDir);
+            pathService.EnsureCalibrationDirs(deviceId, "heading_calibration", out inputDir, out outputDir);
 
             // 初始化相机管理器
             _cameraManager = new CameraManager();
@@ -812,16 +828,19 @@ namespace Wit.Example_BWT901BLE
 
                 if (result)
                 {
+                    _isCameraConnected = true;
                     cameraStatusLight.BackColor = Color.Green;
                 }
                 else
                 {
+                    _isCameraConnected = false;
                     cameraStatusLight.BackColor = Color.Gray;
                     MessageBox.Show("连接相机失败，请检查IP地址和网络", "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 }
             }
             catch (Exception ex)
             {
+                _isCameraConnected = false;
                 cameraStatusLight.BackColor = Color.Gray;
                 MessageBox.Show("连接相机异常: " + ex.Message, "连接失败", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
@@ -1240,28 +1259,23 @@ namespace Wit.Example_BWT901BLE
         // ── 相机标定 ──
         private void cameraCalibButton_Click(object sender, EventArgs e)
         {
-            string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CameraCalibration.exe");
-            if (File.Exists(exePath))
+            using (var panel = new CameraCalibrationPanelForm(AppDomain.CurrentDomain.BaseDirectory, IsCameraConnectedForCalibration))
             {
-                Process.Start(exePath);
-            }
-            else
-            {
-                MessageBox.Show("未找到 CameraCalibration.exe，请先编译相机标定项目。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                panel.ShowDialog(this);
             }
         }
 
-        // ── 航向标定（可选） ──
+        private bool IsCameraConnectedForCalibration()
+        {
+            return _isCameraConnected;
+        }
+
+        // ── 航向标定 ──
         private void instrumentCalibButton_Click(object sender, EventArgs e)
         {
-            string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "InstrumentCalibration.exe");
-            if (File.Exists(exePath))
+            using (var panel = new HeadingCalibrationPanelForm(AppDomain.CurrentDomain.BaseDirectory, TryGetCurrentImuAngles))
             {
-                Process.Start(exePath);
-            }
-            else
-            {
-                MessageBox.Show("未找到 InstrumentCalibration.exe，请先编译航向标定项目。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                panel.ShowDialog(this);
             }
         }
 
@@ -1294,51 +1308,29 @@ namespace Wit.Example_BWT901BLE
         // ── 安装角标定 ──
         private void mountingCalibButton_Click(object sender, EventArgs e)
         {
-            if (FoundDeviceDict.Count == 0)
+            using (var panel = new MountingCalibrationPanelForm(AppDomain.CurrentDomain.BaseDirectory, TryGetCurrentImuAngles))
             {
-                MessageBox.Show("请先连接传感器", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
+                panel.ShowDialog(this);
             }
+        }
+
+        private bool TryGetCurrentImuAngles(out double angleX, out double angleY, out double angleZ)
+        {
+            angleX = 0;
+            angleY = 0;
+            angleZ = 0;
+
+            if (FoundDeviceDict.Count == 0)
+                return false;
 
             var firstDevice = FoundDeviceDict.ElementAt(0).Value;
-            double angleX = firstDevice.GetDeviceData(WitSensorKey.AngleX) ?? 0;
-            double angleY = firstDevice.GetDeviceData(WitSensorKey.AngleY) ?? 0;
+            if (firstDevice == null || firstDevice.IsOpen() == false)
+                return false;
 
-            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "calibration_config.json");
-            CalibrationConfig config;
-            if (File.Exists(configPath))
-            {
-                try { config = CalibrationConfig.Load(configPath); }
-                catch { config = new CalibrationConfig(); }
-            }
-            else
-            {
-                config = new CalibrationConfig();
-            }
-
-            double fx = config.Fx > 0 ? config.Fx : 500;
-            double fy = config.Fy > 0 ? config.Fy : 500;
-            double cx = config.Cx > 0 ? config.Cx : 320;
-            double cy = config.Cy > 0 ? config.Cy : 240;
-
-            // 使用图像中心作为靶标位置占位（实际应从照片检测）
-            double uActual = cx;
-            double vActual = cy;
-
-            var calibrator = new MountingAngleCalibrator();
-            double deltaPitch, deltaRoll;
-            calibrator.Calibrate(angleX, angleY, uActual, vActual, fx, fy, cx, cy, out deltaPitch, out deltaRoll);
-
-            config.DeltaPitch = deltaPitch;
-            config.DeltaRoll = deltaRoll;
-            config.Save(configPath);
-
-            MessageBox.Show(
-                string.Format("安装角标定完成!\n\nIMU当前: AngleX={0:F3}° AngleY={1:F3}°\n\nδ_pitch = {2:F4}°\nδ_roll  = {3:F4}°\n\n已保存到 calibration_config.json",
-                    angleX, angleY, deltaPitch, deltaRoll),
-                "安装角标定",
-                MessageBoxButtons.OK,
-                MessageBoxIcon.Information);
+            angleX = firstDevice.GetDeviceData(WitSensorKey.AngleX) ?? 0;
+            angleY = firstDevice.GetDeviceData(WitSensorKey.AngleY) ?? 0;
+            angleZ = firstDevice.GetDeviceData(WitSensorKey.AngleZ) ?? 0;
+            return true;
         }
 
         // ── 开始数据处理 ──

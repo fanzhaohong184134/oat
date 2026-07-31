@@ -373,7 +373,7 @@ namespace Wit.Example_BWT901BLE
             this.groupBoxSettings.Size = new System.Drawing.Size(260, 240);
             this.groupBoxSettings.TabIndex = 2;
             this.groupBoxSettings.TabStop = false;
-            this.groupBoxSettings.Text = "设置参数";
+            this.groupBoxSettings.Text = "参数设置";
 
             // ── imuSettingsHeaderLabel ──
             this.imuSettingsHeaderLabel.AutoSize = true;
@@ -524,12 +524,12 @@ namespace Wit.Example_BWT901BLE
             this.magCalibrationButton.Click += new System.EventHandler(this.magCalibrationButton_Click);
 
             // ── chipTimeCalibrationButton ──
-            this.chipTimeCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.chipTimeCalibrationButton.Location = new System.Drawing.Point(120, 20);
+            this.chipTimeCalibrationButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
+            this.chipTimeCalibrationButton.Location = new System.Drawing.Point(10, 80);
             this.chipTimeCalibrationButton.Name = "chipTimeCalibrationButton";
             this.chipTimeCalibrationButton.Size = new System.Drawing.Size(105, 25);
             this.chipTimeCalibrationButton.TabIndex = 1;
-            this.chipTimeCalibrationButton.Text = "ChipTime校准";
+            this.chipTimeCalibrationButton.Text = "Chip TIme校准";
             this.chipTimeCalibrationButton.UseVisualStyleBackColor = true;
             this.chipTimeCalibrationButton.Click += new System.EventHandler(this.chipTimeCalibrationButton_Click);
 
@@ -545,7 +545,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── cameraCalibButton ──
             this.cameraCalibButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cameraCalibButton.Location = new System.Drawing.Point(120, 50);
+            this.cameraCalibButton.Location = new System.Drawing.Point(120, 20);
             this.cameraCalibButton.Name = "cameraCalibButton";
             this.cameraCalibButton.Size = new System.Drawing.Size(105, 25);
             this.cameraCalibButton.TabIndex = 3;
@@ -554,8 +554,8 @@ namespace Wit.Example_BWT901BLE
             this.cameraCalibButton.Click += new System.EventHandler(this.cameraCalibButton_Click);
 
             // ── instrumentCalibButton ──
-            this.instrumentCalibButton.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.instrumentCalibButton.Location = new System.Drawing.Point(10, 80);
+            this.instrumentCalibButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
+            this.instrumentCalibButton.Location = new System.Drawing.Point(120, 80);
             this.instrumentCalibButton.Name = "instrumentCalibButton";
             this.instrumentCalibButton.Size = new System.Drawing.Size(105, 25);
             this.instrumentCalibButton.TabIndex = 4;
@@ -565,7 +565,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── mountingCalibButton ──
             this.mountingCalibButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.mountingCalibButton.Location = new System.Drawing.Point(120, 80);
+            this.mountingCalibButton.Location = new System.Drawing.Point(120, 50);
             this.mountingCalibButton.Name = "mountingCalibButton";
             this.mountingCalibButton.Size = new System.Drawing.Size(105, 25);
             this.mountingCalibButton.TabIndex = 5;

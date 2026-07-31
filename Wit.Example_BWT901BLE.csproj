@@ -61,7 +61,21 @@
     <Compile Include="Camera\FloatingPreviewForm.cs">
       <SubType>Form</SubType>
     </Compile>
+    <Compile Include="CalibrationPanels\CalibrationPanelBaseForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CalibrationPanels\CalibrationRuntimeServices.cs" />
+    <Compile Include="CalibrationPanels\CameraCalibrationPanelForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CalibrationPanels\HeadingCalibrationPanelForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="CalibrationPanels\MountingCalibrationPanelForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="DataProcessing\Calibration\CalibrationConfig.cs" />
+    <Compile Include="DataProcessing\Calibration\CalibrationIoModels.cs" />
     <Compile Include="DataProcessing\Calibration\CameraCalibrator.cs" />
     <Compile Include="DataProcessing\Calibration\InstrumentCalibrator.cs" />
     <Compile Include="DataProcessing\Calibration\MountingAngleCalibrator.cs" />
@@ -204,6 +218,11 @@
     <Copy SourceFiles="$(ProjectDir)camera\dlls\x64\Release\demo_jpeg_app.exe" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="Exists('$(ProjectDir)camera\dlls\x64\Release\demo_jpeg_app.exe')" />
     <Copy SourceFiles="$(ProjectDir)camera\dlls\x64\Release\libcurl.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="Exists('$(ProjectDir)camera\dlls\x64\Release\libcurl.dll')" />
     <Copy SourceFiles="$(ProjectDir)camera\dlls\x64\Release\websockets.dll" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="Exists('$(ProjectDir)camera\dlls\x64\Release\websockets.dll')" />
+  </Target>
+  <Target Name="CopyCalibrationTools" AfterTargets="Build">
+    <Copy SourceFiles="$(ProjectDir)DataProcessing\Calibration\CameraCalibrationApp\bin\$(Configuration)\CameraCalibration.exe" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="Exists('$(ProjectDir)DataProcessing\Calibration\CameraCalibrationApp\bin\$(Configuration)\CameraCalibration.exe')" />
+    <Copy SourceFiles="$(ProjectDir)DataProcessing\Calibration\InstrumentCalibrationApp\bin\$(Configuration)\InstrumentCalibration.exe" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="Exists('$(ProjectDir)DataProcessing\Calibration\InstrumentCalibrationApp\bin\$(Configuration)\InstrumentCalibration.exe')" />
+    <Copy SourceFiles="$(ProjectDir)DataProcessing\Calibration\MountingCalibrationApp\bin\$(Configuration)\MountingCalibration.exe" DestinationFolder="$(TargetDir)" SkipUnchangedFiles="true" Condition="Exists('$(ProjectDir)DataProcessing\Calibration\MountingCalibrationApp\bin\$(Configuration)\MountingCalibration.exe')" />
   </Target>
   <ItemGroup>
     <None Include="camera\build_camera.bat" />
