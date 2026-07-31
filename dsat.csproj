@@ -90,6 +90,7 @@
     <Compile Include="DataProcessing\PostProcessing\StabilityFilter.cs" />
     <Compile Include="DataProcessing\PostProcessing\OffsetCalculator.cs" />
     <Compile Include="DataProcessing\PostProcessing\ProcessingReport.cs" />
+    <Compile Include="DataProcessing\PostProcessing\NorthDirectionImageAnnotator.cs" />
     <Compile Include="DataProcessing\PostProcessing\PostProcessor.cs" />
     <Compile Include="Sampling\SamplingLogger.cs" />
     <Compile Include="Sampling\SamplingRecord.cs" />

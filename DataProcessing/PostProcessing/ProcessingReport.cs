@@ -17,6 +17,13 @@ namespace dsat.DataProcessing.PostProcessing
         public double Azimuth { get; set; }
         public int TotalFrames { get; set; }
         public int ValidFrames { get; set; }
+        public int AnnotatedImageCount { get; set; }
+        public int AnnotatedImageFailedCount { get; set; }
+        public int CircleDetectedCount { get; set; }
+        public int CircleFallbackCenterCount { get; set; }
+        public bool MetadataOnlyMode { get; set; }
+        public string AnnotatedImageDirectory { get; set; }
+        public string AnnotatedImageManifestPath { get; set; }
         public List<double> PerFrameDeltaE { get; set; } = new List<double>();
         public List<double> PerFrameDeltaN { get; set; } = new List<double>();
 
@@ -82,6 +89,15 @@ namespace dsat.DataProcessing.PostProcessing
             sb.AppendLine(string.Format(ci, "Sigma N:       {0:F4} mm", SigmaN));
             sb.AppendLine(string.Format(ci, "Delta H:       {0:F4} mm", DeltaH));
             sb.AppendLine(string.Format(ci, "Azimuth:       {0:F2} deg", Azimuth));
+            if (!string.IsNullOrEmpty(AnnotatedImageDirectory))
+            {
+                sb.AppendLine(string.Format(ci, "North Overlay: {0} ok / {1} fail", AnnotatedImageCount, AnnotatedImageFailedCount));
+                sb.AppendLine(string.Format(ci, "Image Mode:    {0}", MetadataOnlyMode ? "metadata-only" : "overlay+metadata"));
+                sb.AppendLine(string.Format(ci, "Circle Origin: {0} detected / {1} fallback", CircleDetectedCount, CircleFallbackCenterCount));
+                sb.AppendLine(string.Format(ci, "Image Out Dir: {0}", AnnotatedImageDirectory));
+                if (!string.IsNullOrEmpty(AnnotatedImageManifestPath))
+                    sb.AppendLine(string.Format(ci, "North CSV:    {0}", AnnotatedImageManifestPath));
+            }
             sb.AppendLine("========================================");
             return sb.ToString();
         }

@@ -34,6 +34,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="System.Drawing" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Runtime.Serialization" />
@@ -48,6 +49,7 @@
     <Compile Include="..\StabilityFilter.cs" Link="StabilityFilter.cs" />
     <Compile Include="..\OffsetCalculator.cs" Link="OffsetCalculator.cs" />
     <Compile Include="..\ProcessingReport.cs" Link="ProcessingReport.cs" />
+    <Compile Include="..\NorthDirectionImageAnnotator.cs" Link="NorthDirectionImageAnnotator.cs" />
     <Compile Include="..\PostProcessor.cs" Link="PostProcessor.cs" />
     <Compile Include="..\..\Calibration\CalibrationConfig.cs" Link="CalibrationConfig.cs" />
     <Compile Include="Program.cs" />

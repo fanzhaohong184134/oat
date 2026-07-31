@@ -60,6 +60,12 @@ namespace dsat
         private Panel _sensorAlertPanel;
         private Button _cameraAlertClearButton;
         private Button _sensorAlertClearButton;
+        private CheckBox _circleCenterOverlayCheckBox;
+        private CheckBox _metadataOnlyCheckBox;
+        private readonly string _processingUiPrefPath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+            "dsat",
+            "processing_ui_prefs.txt");
         private System.Windows.Forms.Timer _cameraAlertAutoClearTimer;
         private System.Windows.Forms.Timer _sensorAlertAutoClearTimer;
         private bool _leftGroupGridInitialized;
@@ -212,6 +218,7 @@ namespace dsat
             HarmonizeKeyButtonLayout();
             imuSamplingButton.Text = "IMU采样";
             InitializeLeftGroupGridLayouts();
+            LoadProcessingUiPreferences();
             ApplyAdaptiveLeftLayout();
             leftTableLayout.Resize += (s, args) => ApplyAdaptiveLeftLayout();
             InitializeAlertBanners();
@@ -581,7 +588,7 @@ namespace dsat
                 Name = "dataProcessingGridLayout",
                 Dock = DockStyle.Fill,
                 ColumnCount = 3,
-                RowCount = 4,
+                RowCount = 6,
                 Margin = new Padding(0),
                 Padding = new Padding(6, 2, 6, 4)
             };
@@ -592,6 +599,8 @@ namespace dsat
 
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
@@ -623,15 +632,41 @@ namespace dsat
             browseCameraCsvButton.Margin = new Padding(0, 2, 0, 2);
             grid.Controls.Add(browseCameraCsvButton, 2, 1);
 
+            _circleCenterOverlayCheckBox = new CheckBox
+            {
+                AutoSize = false,
+                Dock = DockStyle.Fill,
+                Text = "显示圆心识别边界",
+                Checked = true,
+                ForeColor = ThemeText,
+                BackColor = Color.Transparent,
+                Margin = new Padding(0, 1, 0, 0)
+            };
+            grid.Controls.Add(_circleCenterOverlayCheckBox, 0, 2);
+            grid.SetColumnSpan(_circleCenterOverlayCheckBox, 3);
+
+            _metadataOnlyCheckBox = new CheckBox
+            {
+                AutoSize = false,
+                Dock = DockStyle.Fill,
+                Text = "仅写JPG元数据(不在图上绘制)",
+                Checked = false,
+                ForeColor = ThemeText,
+                BackColor = Color.Transparent,
+                Margin = new Padding(0, 1, 0, 0)
+            };
+            grid.Controls.Add(_metadataOnlyCheckBox, 0, 3);
+            grid.SetColumnSpan(_metadataOnlyCheckBox, 3);
+
             processButton.Dock = DockStyle.Fill;
             processButton.Margin = new Padding(0, 4, 0, 1);
-            grid.Controls.Add(processButton, 0, 2);
+            grid.Controls.Add(processButton, 0, 4);
             grid.SetColumnSpan(processButton, 3);
 
             reportLabel.Dock = DockStyle.Fill;
             reportLabel.AutoEllipsis = true;
             reportLabel.Margin = new Padding(0, 2, 0, 0);
-            grid.Controls.Add(reportLabel, 0, 3);
+            grid.Controls.Add(reportLabel, 0, 5);
             grid.SetColumnSpan(reportLabel, 3);
         }
 
@@ -944,6 +979,55 @@ namespace dsat
             gb.ResumeLayout();
         }
 
+        private void LoadProcessingUiPreferences()
+        {
+            try
+            {
+                if (!File.Exists(_processingUiPrefPath))
+                    return;
+
+                var lines = File.ReadAllLines(_processingUiPrefPath);
+                foreach (var line in lines)
+                {
+                    if (string.IsNullOrWhiteSpace(line)) continue;
+                    int idx = line.IndexOf('=');
+                    if (idx <= 0) continue;
+
+                    string key = line.Substring(0, idx).Trim();
+                    string val = line.Substring(idx + 1).Trim();
+                    bool parsed;
+                    if (!bool.TryParse(val, out parsed))
+                        continue;
+
+                    if (string.Equals(key, "DrawCircleOutline", StringComparison.OrdinalIgnoreCase) && _circleCenterOverlayCheckBox != null)
+                        _circleCenterOverlayCheckBox.Checked = parsed;
+                    else if (string.Equals(key, "MetadataOnlyMode", StringComparison.OrdinalIgnoreCase) && _metadataOnlyCheckBox != null)
+                        _metadataOnlyCheckBox.Checked = parsed;
+                }
+            }
+            catch { }
+        }
+
+        private void SaveProcessingUiPreferences()
+        {
+            try
+            {
+                string dir = Path.GetDirectoryName(_processingUiPrefPath);
+                if (!string.IsNullOrEmpty(dir))
+                    Directory.CreateDirectory(dir);
+
+                bool drawCircle = _circleCenterOverlayCheckBox == null || _circleCenterOverlayCheckBox.Checked;
+                bool metadataOnly = _metadataOnlyCheckBox != null && _metadataOnlyCheckBox.Checked;
+
+                File.WriteAllLines(_processingUiPrefPath, new[]
+                {
+                    "DrawCircleOutline=" + drawCircle,
+                    "MetadataOnlyMode=" + metadataOnly
+                });
+            }
+            catch { }
+        }
+
         /// <summary>
         /// 窗体关闭时
         /// When the form is closed
@@ -952,6 +1036,8 @@ namespace dsat
         /// <param name="e"></param>
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            SaveProcessingUiPreferences();
+
             // 关闭刷新数据线程
             // Close refresh data thread
             EnableRefreshDataTh = false;
@@ -2283,7 +2369,9 @@ namespace dsat
             try
             {
                 var processor = new PostProcessor();
-                ProcessingReport report = await Task.Run(() => processor.Run(imuCsv, cameraCsv, config));
+                bool drawCircleOutline = _circleCenterOverlayCheckBox == null || _circleCenterOverlayCheckBox.Checked;
+                bool metadataOnly = _metadataOnlyCheckBox != null && _metadataOnlyCheckBox.Checked;
+                ProcessingReport report = await Task.Run(() => processor.Run(imuCsv, cameraCsv, config, drawCircleOutline, metadataOnly));
 
                 // 显示核心报告
                 reportLabel.Text = string.Format("ΔE={0:+0.00;-0.00}mm ΔN={1:+0.00;-0.00}mm\n偏移={2:F2}mm 方位={3:F1}° 有效帧={4}/{5}",
@@ -2300,7 +2388,26 @@ namespace dsat
                     ? "\n\n提示: 当前未使用现场航向校核(ψ_offset≈0)，按磁场定位解算，精度可能受损。"
                     : string.Empty;
 
-                MessageBox.Show(report.ToSummary() + magneticOnlyTip + "\n\n报告已保存至:\n" + reportPath, "处理完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                string northInfo = string.Empty;
+                if (!string.IsNullOrEmpty(report.AnnotatedImageDirectory))
+                {
+                    northInfo = string.Format("\n\n北向标注: 成功 {0} 张, 失败 {1} 张\n圆心识别: 成功 {2} 张, 回退中心点 {3} 张\n输出目录:\n{4}",
+                        report.AnnotatedImageCount,
+                        report.AnnotatedImageFailedCount,
+                        report.CircleDetectedCount,
+                        report.CircleFallbackCenterCount,
+                        report.AnnotatedImageDirectory);
+                    if (report.MetadataOnlyMode)
+                    {
+                        northInfo += "\n当前模式: 仅写元数据(无图上标线)";
+                    }
+                    if (!string.IsNullOrEmpty(report.AnnotatedImageManifestPath))
+                    {
+                        northInfo += "\n北向角清单CSV:\n" + report.AnnotatedImageManifestPath;
+                    }
+                }
+
+                MessageBox.Show(report.ToSummary() + magneticOnlyTip + northInfo + "\n\n报告已保存至:\n" + reportPath, "处理完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
