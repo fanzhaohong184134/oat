@@ -62,6 +62,7 @@ namespace dsat
         private Button _sensorAlertClearButton;
         private System.Windows.Forms.Timer _cameraAlertAutoClearTimer;
         private System.Windows.Forms.Timer _sensorAlertAutoClearTimer;
+        private bool _leftGroupGridInitialized;
 
 
         /// <summary>
@@ -210,6 +211,7 @@ namespace dsat
             ApplyStatusLightStyling(cameraStatusLight);
             HarmonizeKeyButtonLayout();
             imuSamplingButton.Text = "IMU采样";
+            InitializeLeftGroupGridLayouts();
             ApplyAdaptiveLeftLayout();
             leftTableLayout.Resize += (s, args) => ApplyAdaptiveLeftLayout();
             InitializeAlertBanners();
@@ -343,6 +345,342 @@ namespace dsat
             light.BackColorChanged += StatusLight_BackColorChanged;
         }
 
+        private void InitializeLeftGroupGridLayouts()
+        {
+            if (_leftGroupGridInitialized) return;
+
+            BuildConnectionGridLayout();
+            BuildSamplingGridLayout();
+            BuildSettingsGridLayout();
+            BuildCalibrationGridLayout();
+            BuildDataProcessingGridLayout();
+
+            _leftGroupGridInitialized = true;
+        }
+
+        private void BuildConnectionGridLayout()
+        {
+            TableLayoutPanel grid = new TableLayoutPanel
+            {
+                Name = "connectionGridLayout",
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 5,
+                Margin = new Padding(0),
+                Padding = new Padding(6, 2, 6, 4)
+            };
+
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
+
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            groupBoxConnection.Controls.Add(grid);
+
+            Panel sensorStatusRow = CreateStatusRowPanel(sensorLabel, sensorStatusLight);
+            grid.Controls.Add(sensorStatusRow, 0, 0);
+            grid.SetColumnSpan(sensorStatusRow, 3);
+
+            sensorNameTextBox.Dock = DockStyle.Fill;
+            sensorNameTextBox.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(sensorNameTextBox, 0, 1);
+            grid.SetColumnSpan(sensorNameTextBox, 2);
+
+            sensorConnectButton.Dock = DockStyle.Fill;
+            sensorConnectButton.Margin = new Padding(0, 1, 0, 1);
+            grid.Controls.Add(sensorConnectButton, 2, 1);
+
+            Panel cameraStatusRow = CreateStatusRowPanel(cameraLabel, cameraStatusLight);
+            grid.Controls.Add(cameraStatusRow, 0, 2);
+            grid.SetColumnSpan(cameraStatusRow, 3);
+
+            cameraIpTextBox.Dock = DockStyle.Fill;
+            cameraIpTextBox.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(cameraIpTextBox, 0, 3);
+            grid.SetColumnSpan(cameraIpTextBox, 2);
+
+            cameraConnectButton.Dock = DockStyle.Fill;
+            cameraConnectButton.Margin = new Padding(0, 1, 0, 1);
+            grid.Controls.Add(cameraConnectButton, 2, 3);
+        }
+
+        private static Panel CreateStatusRowPanel(Label label, Panel statusLight)
+        {
+            label.AutoSize = true;
+            statusLight.Margin = new Padding(8, 3, 0, 0);
+
+            FlowLayoutPanel row = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.LeftToRight,
+                WrapContents = false,
+                Margin = new Padding(0),
+                Padding = new Padding(0)
+            };
+
+            row.Controls.Add(label);
+            row.Controls.Add(statusLight);
+            return row;
+        }
+
+        private void BuildSamplingGridLayout()
+        {
+            TableLayoutPanel grid = new TableLayoutPanel
+            {
+                Name = "samplingGridLayout",
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 3,
+                Margin = new Padding(0),
+                Padding = new Padding(6, 2, 6, 4)
+            };
+
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            groupBoxSampling.Controls.Add(grid);
+
+            imuSamplingButton.Dock = DockStyle.Fill;
+            imuSamplingButton.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(imuSamplingButton, 0, 0);
+
+            cameraSamplingButton.Dock = DockStyle.Fill;
+            cameraSamplingButton.Margin = new Padding(4, 2, 0, 2);
+            grid.Controls.Add(cameraSamplingButton, 1, 0);
+
+            logStatusLabel.AutoSize = false;
+            logStatusLabel.TextAlign = ContentAlignment.MiddleLeft;
+            logStatusLabel.Dock = DockStyle.Fill;
+            logStatusLabel.Margin = new Padding(0, 2, 4, 0);
+            grid.Controls.Add(logStatusLabel, 0, 1);
+
+            logCountLabel.AutoSize = false;
+            logCountLabel.TextAlign = ContentAlignment.MiddleRight;
+            logCountLabel.Dock = DockStyle.Fill;
+            logCountLabel.Margin = new Padding(4, 2, 0, 0);
+            grid.Controls.Add(logCountLabel, 1, 1);
+        }
+
+        private void BuildSettingsGridLayout()
+        {
+            TableLayoutPanel grid = new TableLayoutPanel
+            {
+                Name = "settingsGridLayout",
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 11,
+                Margin = new Padding(0),
+                Padding = new Padding(6, 2, 6, 4)
+            };
+
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 74F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 30F));
+
+            for (int i = 0; i < 5; i++)
+            {
+                grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            }
+            // Spacer between capture interval row and save-directory block.
+            // Spacer between save directory row and base file name row.
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 6F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 6F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            groupBoxSettings.Controls.Add(grid);
+
+            imuSettingsHeaderLabel.AutoSize = false;
+            imuSettingsHeaderLabel.TextAlign = ContentAlignment.MiddleLeft;
+            imuSettingsHeaderLabel.Dock = DockStyle.Fill;
+            grid.Controls.Add(imuSettingsHeaderLabel, 0, 0);
+            grid.SetColumnSpan(imuSettingsHeaderLabel, 3);
+
+            returnRateLabel.AutoSize = false;
+            returnRateLabel.TextAlign = ContentAlignment.MiddleLeft;
+            returnRateLabel.Dock = DockStyle.Fill;
+            grid.Controls.Add(returnRateLabel, 0, 1);
+
+            returnRateComboBox.Dock = DockStyle.Fill;
+            returnRateComboBox.Margin = new Padding(0, 2, 0, 2);
+            grid.Controls.Add(returnRateComboBox, 1, 1);
+            grid.SetColumnSpan(returnRateComboBox, 2);
+
+            bandWidthLabel.AutoSize = false;
+            bandWidthLabel.TextAlign = ContentAlignment.MiddleLeft;
+            bandWidthLabel.Dock = DockStyle.Fill;
+            grid.Controls.Add(bandWidthLabel, 0, 2);
+
+            bandWidthComboBox.Dock = DockStyle.Fill;
+            bandWidthComboBox.Margin = new Padding(0, 2, 0, 2);
+            grid.Controls.Add(bandWidthComboBox, 1, 2);
+            grid.SetColumnSpan(bandWidthComboBox, 2);
+
+            cameraSettingsHeaderLabel.AutoSize = false;
+            cameraSettingsHeaderLabel.TextAlign = ContentAlignment.MiddleLeft;
+            cameraSettingsHeaderLabel.Dock = DockStyle.Fill;
+            grid.Controls.Add(cameraSettingsHeaderLabel, 0, 3);
+            grid.SetColumnSpan(cameraSettingsHeaderLabel, 3);
+
+            captureIntervalLabel.AutoSize = false;
+            captureIntervalLabel.TextAlign = ContentAlignment.MiddleLeft;
+            captureIntervalLabel.Dock = DockStyle.Fill;
+            grid.Controls.Add(captureIntervalLabel, 0, 4);
+
+            captureIntervalTextBox.Dock = DockStyle.Fill;
+            captureIntervalTextBox.Margin = new Padding(0, 2, 0, 2);
+            grid.Controls.Add(captureIntervalTextBox, 1, 4);
+            grid.SetColumnSpan(captureIntervalTextBox, 2);
+
+            saveDirectoryLabel.AutoSize = false;
+            saveDirectoryLabel.TextAlign = ContentAlignment.MiddleLeft;
+            saveDirectoryLabel.Dock = DockStyle.Fill;
+            grid.Controls.Add(saveDirectoryLabel, 0, 6);
+            grid.SetColumnSpan(saveDirectoryLabel, 3);
+
+            saveDirectoryTextBox.Dock = DockStyle.Fill;
+            saveDirectoryTextBox.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(saveDirectoryTextBox, 0, 7);
+            grid.SetColumnSpan(saveDirectoryTextBox, 2);
+
+            browseSaveDirButton.Dock = DockStyle.Fill;
+            browseSaveDirButton.Margin = new Padding(0, 2, 0, 2);
+            grid.Controls.Add(browseSaveDirButton, 2, 7);
+
+            baseFileNameLabel.AutoSize = false;
+            baseFileNameLabel.TextAlign = ContentAlignment.MiddleLeft;
+            baseFileNameLabel.Dock = DockStyle.Fill;
+            baseFileNameLabel.Margin = new Padding(0, 3, 4, 1);
+            grid.Controls.Add(baseFileNameLabel, 0, 9);
+
+            baseFileNameTextBox.Dock = DockStyle.Fill;
+            baseFileNameTextBox.Margin = new Padding(0, 2, 0, 2);
+            grid.Controls.Add(baseFileNameTextBox, 1, 9);
+            grid.SetColumnSpan(baseFileNameTextBox, 2);
+
+            showPreviewButton.Dock = DockStyle.Fill;
+            showPreviewButton.Margin = new Padding(0, 4, 0, 0);
+            grid.Controls.Add(showPreviewButton, 0, 10);
+            grid.SetColumnSpan(showPreviewButton, 3);
+        }
+
+        private void BuildDataProcessingGridLayout()
+        {
+            TableLayoutPanel grid = new TableLayoutPanel
+            {
+                Name = "dataProcessingGridLayout",
+                Dock = DockStyle.Fill,
+                ColumnCount = 3,
+                RowCount = 4,
+                Margin = new Padding(0),
+                Padding = new Padding(6, 2, 6, 4)
+            };
+
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 64F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 30F));
+
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            groupBoxDataProcessing.Controls.Add(grid);
+
+            imuCsvLabel.AutoSize = false;
+            imuCsvLabel.TextAlign = ContentAlignment.MiddleLeft;
+            imuCsvLabel.Dock = DockStyle.Fill;
+            grid.Controls.Add(imuCsvLabel, 0, 0);
+
+            imuCsvTextBox.Dock = DockStyle.Fill;
+            imuCsvTextBox.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(imuCsvTextBox, 1, 0);
+
+            browseImuCsvButton.Dock = DockStyle.Fill;
+            browseImuCsvButton.Margin = new Padding(0, 2, 0, 2);
+            grid.Controls.Add(browseImuCsvButton, 2, 0);
+
+            cameraCsvLabel.AutoSize = false;
+            cameraCsvLabel.TextAlign = ContentAlignment.MiddleLeft;
+            cameraCsvLabel.Dock = DockStyle.Fill;
+            grid.Controls.Add(cameraCsvLabel, 0, 1);
+
+            cameraCsvTextBox.Dock = DockStyle.Fill;
+            cameraCsvTextBox.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(cameraCsvTextBox, 1, 1);
+
+            browseCameraCsvButton.Dock = DockStyle.Fill;
+            browseCameraCsvButton.Margin = new Padding(0, 2, 0, 2);
+            grid.Controls.Add(browseCameraCsvButton, 2, 1);
+
+            processButton.Dock = DockStyle.Fill;
+            processButton.Margin = new Padding(0, 4, 0, 1);
+            grid.Controls.Add(processButton, 0, 2);
+            grid.SetColumnSpan(processButton, 3);
+
+            reportLabel.Dock = DockStyle.Fill;
+            reportLabel.AutoEllipsis = true;
+            reportLabel.Margin = new Padding(0, 2, 0, 0);
+            grid.Controls.Add(reportLabel, 0, 3);
+            grid.SetColumnSpan(reportLabel, 3);
+        }
+
+        private void BuildCalibrationGridLayout()
+        {
+            TableLayoutPanel grid = new TableLayoutPanel
+            {
+                Name = "calibrationGridLayout",
+                Dock = DockStyle.Fill,
+                ColumnCount = 2,
+                RowCount = 4,
+                Margin = new Padding(0),
+                Padding = new Padding(6, 2, 6, 4)
+            };
+
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+
+            groupBoxCalibration.Controls.Add(grid);
+
+            magCalibrationButton.Dock = DockStyle.Fill;
+            magCalibrationButton.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(magCalibrationButton, 0, 0);
+
+            cameraCalibButton.Dock = DockStyle.Fill;
+            cameraCalibButton.Margin = new Padding(4, 2, 0, 2);
+            grid.Controls.Add(cameraCalibButton, 1, 0);
+
+            appliedCalibrationButton.Dock = DockStyle.Fill;
+            appliedCalibrationButton.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(appliedCalibrationButton, 0, 1);
+
+            mountingCalibButton.Dock = DockStyle.Fill;
+            mountingCalibButton.Margin = new Padding(4, 2, 0, 2);
+            grid.Controls.Add(mountingCalibButton, 1, 1);
+
+            chipTimeCalibrationButton.Dock = DockStyle.Fill;
+            chipTimeCalibrationButton.Margin = new Padding(0, 2, 4, 2);
+            grid.Controls.Add(chipTimeCalibrationButton, 0, 2);
+
+            instrumentCalibButton.Dock = DockStyle.Fill;
+            instrumentCalibButton.Margin = new Padding(4, 2, 0, 2);
+            grid.Controls.Add(instrumentCalibButton, 1, 2);
+        }
+
         private void StatusLight_BackColorChanged(object sender, EventArgs e)
         {
             Panel panel = sender as Panel;
@@ -408,21 +746,59 @@ namespace dsat
                 groupBoxDataProcessing
             };
 
-            int[] minHeights = groups.Select(g => CalculateGroupMinimumHeight(g)).ToArray();
-            int totalMin = minHeights.Sum();
+            int[] desiredHeights = groups.Select(g => CalculateGroupMinimumHeight(g)).ToArray();
+            // Hard floor per section to keep controls readable while still allowing overall fit.
+            int[] floorHeights = { 94, 78, 154, 88, 186 };
             int available = Math.Max(0, leftTableLayout.ClientSize.Height);
-            int extra = Math.Max(0, available - totalMin);
+            if (available <= 0) return;
 
-            double[] weights = { 1.2, 0.7, 1.6, 1.0, 1.5 };
-            double weightSum = weights.Sum();
+            int[] targetHeights = (int[])desiredHeights.Clone();
+            int totalTarget = targetHeights.Sum();
+
+            if (totalTarget > available)
+            {
+                int deficit = totalTarget - available;
+                int[] compressible = targetHeights
+                    .Select((h, i) => Math.Max(0, h - floorHeights[i]))
+                    .ToArray();
+                int totalCompressible = compressible.Sum();
+
+                if (totalCompressible > 0)
+                {
+                    for (int i = 0; i < targetHeights.Length; i++)
+                    {
+                        int reduce = (int)Math.Floor(deficit * (compressible[i] / (double)totalCompressible));
+                        targetHeights[i] = Math.Max(floorHeights[i], targetHeights[i] - reduce);
+                    }
+                }
+            }
+            else if (totalTarget < available)
+            {
+                int extra = available - totalTarget;
+                // Prioritize operation-critical regions in field use: sampling and especially data processing.
+                double[] weights = { 0.85, 1.15, 1.2, 0.8, 2.5 };
+                double weightSum = weights.Sum();
+
+                for (int i = 0; i < targetHeights.Length; i++)
+                {
+                    int bonus = (int)Math.Round(extra * (weights[i] / weightSum));
+                    targetHeights[i] += bonus;
+                }
+            }
+
+            // Make total height exactly match available to avoid bottom row being overlapped.
+            int diff = available - targetHeights.Sum();
+            targetHeights[targetHeights.Length - 1] += diff;
+            if (targetHeights[targetHeights.Length - 1] < floorHeights[targetHeights.Length - 1])
+            {
+                targetHeights[targetHeights.Length - 1] = floorHeights[targetHeights.Length - 1];
+            }
 
             for (int i = 0; i < groups.Length; i++)
             {
-                int bonus = (int)Math.Round(extra * (weights[i] / weightSum));
-                int targetHeight = minHeights[i] + bonus;
-                groups[i].MinimumSize = new Size(0, minHeights[i]);
+                groups[i].MinimumSize = new Size(0, floorHeights[i]);
                 leftTableLayout.RowStyles[i].SizeType = SizeType.Absolute;
-                leftTableLayout.RowStyles[i].Height = targetHeight;
+                leftTableLayout.RowStyles[i].Height = targetHeights[i];
             }
         }
 
@@ -431,11 +807,18 @@ namespace dsat
             int maxBottom = 0;
             foreach (Control c in group.Controls)
             {
+                if (c is TableLayoutPanel tlp && c.Dock == DockStyle.Fill)
+                {
+                    int pref = tlp.GetPreferredSize(new Size(group.ClientSize.Width, 0)).Height + tlp.Margin.Vertical;
+                    maxBottom = Math.Max(maxBottom, pref);
+                    continue;
+                }
+
                 maxBottom = Math.Max(maxBottom, c.Bottom);
             }
 
-            int titleAndPadding = group.Font.Height + 18;
-            return Math.Max(78, maxBottom + titleAndPadding);
+            int contentPadding = Math.Max(8, group.Padding.Bottom + 4);
+            return Math.Max(72, maxBottom + contentPadding);
         }
 
         private void ApplySurveyingTheme()

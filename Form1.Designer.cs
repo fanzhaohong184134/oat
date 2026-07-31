@@ -437,7 +437,7 @@ namespace dsat
             this.captureIntervalLabel.Name = "captureIntervalLabel";
             this.captureIntervalLabel.Size = new System.Drawing.Size(67, 13);
             this.captureIntervalLabel.TabIndex = 13;
-            this.captureIntervalLabel.Text = "拍照间隔(秒)";
+            this.captureIntervalLabel.Text = "拍照间隔";
 
             // ── captureIntervalTextBox ──
             this.captureIntervalTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
@@ -464,9 +464,9 @@ namespace dsat
 
             // ── browseSaveDirButton ──
             this.browseSaveDirButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.browseSaveDirButton.Location = new System.Drawing.Point(170, 156);
+            this.browseSaveDirButton.Location = new System.Drawing.Point(170, 158);
             this.browseSaveDirButton.Name = "browseSaveDirButton";
-            this.browseSaveDirButton.Size = new System.Drawing.Size(40, 24);
+            this.browseSaveDirButton.Size = new System.Drawing.Size(40, 20);
             this.browseSaveDirButton.TabIndex = 17;
             this.browseSaveDirButton.Text = "...";
             this.browseSaveDirButton.UseVisualStyleBackColor = true;
@@ -611,9 +611,9 @@ namespace dsat
 
             // ── browseImuCsvButton ──
             this.browseImuCsvButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.browseImuCsvButton.Location = new System.Drawing.Point(195, 17);
+            this.browseImuCsvButton.Location = new System.Drawing.Point(195, 18);
             this.browseImuCsvButton.Name = "browseImuCsvButton";
-            this.browseImuCsvButton.Size = new System.Drawing.Size(30, 22);
+            this.browseImuCsvButton.Size = new System.Drawing.Size(30, 20);
             this.browseImuCsvButton.TabIndex = 2;
             this.browseImuCsvButton.Text = "...";
             this.browseImuCsvButton.UseVisualStyleBackColor = true;
@@ -636,9 +636,9 @@ namespace dsat
 
             // ── browseCameraCsvButton ──
             this.browseCameraCsvButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.browseCameraCsvButton.Location = new System.Drawing.Point(195, 41);
+            this.browseCameraCsvButton.Location = new System.Drawing.Point(195, 42);
             this.browseCameraCsvButton.Name = "browseCameraCsvButton";
-            this.browseCameraCsvButton.Size = new System.Drawing.Size(30, 22);
+            this.browseCameraCsvButton.Size = new System.Drawing.Size(30, 20);
             this.browseCameraCsvButton.TabIndex = 5;
             this.browseCameraCsvButton.Text = "...";
             this.browseCameraCsvButton.UseVisualStyleBackColor = true;
