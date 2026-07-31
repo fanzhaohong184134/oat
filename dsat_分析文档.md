@@ -4,7 +4,7 @@
 
 本项目是维特智能（WitMotion）开发的 **BWT901BLE 九轴蓝牙惯性测量单元（IMU）** 的 Windows C# 示例程序。该程序通过 Windows BLE（蓝牙低功耗）接口连接 BWT901BLE 传感器，实时读取并显示加速度、角速度、角度、磁场等九轴传感器数据，并支持传感器校准、参数配置和采样数据记录。
 
-- **项目名称**: Wit.Example_BWT901BLE
+- **项目名称**: dsat
 - **开发语言**: C# 8.0
 - **目标框架**: .NET Framework 4.5
 - **项目类型**: Windows Forms 桌面应用程序
@@ -65,7 +65,7 @@
 ### 3.1 目录结构
 
 ```
-Wit.Example_BWT901BLE/
+dsat/
 ├── Form1.cs                    # 主窗口逻辑（扫描、连接、数据显示、校准、记录）
 ├── Form1.Designer.cs           # 主窗口UI布局定义
 ├── Form1.resx                  # 中文资源文件
@@ -190,7 +190,7 @@ Form1.BWT901BLE_OnRecord (更新UI显示 / 写入CSV采样日志)
 
 1. **打开解决方案**
    ```
-   双击 Wit.Example_BWT901BLE.sln 用 Visual Studio 打开
+   双击 dsat.sln 用 Visual Studio 打开
    ```
 
 2. **选择编译配置**
@@ -203,15 +203,15 @@ Form1.BWT901BLE_OnRecord (更新UI显示 / 写入CSV采样日志)
 
 4. **输出文件**
    ```
-   bin\Debug\Wit.Example_BWT901BLE.exe
+   bin\Debug\dsat.exe
    bin\Debug\Windows.winmd
-   bin\Debug\zh-CN\Wit.Example_BWT901BLE.resources.dll
+    bin\Debug\zh-CN\dsat.resources.dll
    ```
 
 ### 4.3 使用 MSBuild 命令行编译
 
 ```cmd
-"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" Wit.Example_BWT901BLE.sln /p:Configuration=Release "/p:Platform=Any CPU" /t:Rebuild
+"C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Current\Bin\MSBuild.exe" dsat.sln /p:Configuration=Release "/p:Platform=Any CPU" /t:Rebuild
 ```
 
 > **注意**: 不能使用 `dotnet build` 编译，因为本项目是 .NET Framework 4.5 项目，需要使用 Visual Studio 自带的 MSBuild。
@@ -234,7 +234,7 @@ Form1.BWT901BLE_OnRecord (更新UI显示 / 写入CSV采样日志)
 ### 5.2 操作步骤
 
 #### 步骤1：启动程序
-运行 `bin\Debug\Wit.Example_BWT901BLE.exe`
+运行 `bin\Debug\dsat.exe`
 
 #### 步骤2：扫描设备
 点击左侧 **【开始扫描】** 按钮，程序将自动扫描周围蓝牙设备。

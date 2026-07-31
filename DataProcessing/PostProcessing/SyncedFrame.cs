@@ -1,4 +1,4 @@
-namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
+namespace dsat.DataProcessing.PostProcessing
 {
     public class SyncedFrame
     {
@@ -7,3 +7,4 @@ namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
         public bool IsStable { get; set; }
     }
 }
+

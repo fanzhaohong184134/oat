@@ -7,7 +7,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
-namespace Wit.Example_BWT901BLE.Camera
+namespace dsat.Camera
 {
     /// <summary>
     /// 相机管理器 - 通过demo_jpeg_app.exe控制相机拍照
@@ -44,10 +44,8 @@ namespace Wit.Example_BWT901BLE.Camera
         private Process _previewProcess;
         private Process _ffmpegProcess;
         private string _previewOutputDir;
-        private FileSystemWatcher _previewFileWatcher;
         private bool _isPreviewRunning;
         private int _previewFrameCount;
-        private string _lastPreviewFramePath;
 
         public bool IsCapturing => _isCapturing;
         public int CaptureCount => _captureCount;
@@ -658,7 +656,6 @@ namespace Wit.Example_BWT901BLE.Camera
 
             _isPreviewRunning = true;
             _previewFrameCount = 0;
-            _lastPreviewFramePath = null;
 
             try
             {
@@ -958,3 +955,4 @@ namespace Wit.Example_BWT901BLE.Camera
         #endregion
     }
 }
+

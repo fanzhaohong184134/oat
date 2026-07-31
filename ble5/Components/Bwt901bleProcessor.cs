@@ -110,7 +110,7 @@ namespace Wit.SDK.Modular.Sensor.Modular.DataProcessor.Roles
                     ReadSerialNumberReg(DeviceModel);
                     ReadVersionNumberReg(DeviceModel);
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     //有异常但不处理
                     Debug.WriteLine("BWT901BLECL5_0DataProcessor:自动读取数据异常");

@@ -1,6 +1,6 @@
 using System;
 
-namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
+namespace dsat.DataProcessing.PostProcessing
 {
     public class CameraFrame
     {
@@ -12,3 +12,4 @@ namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
         public bool Success { get; set; }
     }
 }
+

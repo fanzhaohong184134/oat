@@ -1,5 +1,5 @@
 
-namespace Wit.Example_BWT901BLE
+namespace dsat
 {
     partial class Form1
     {
@@ -157,6 +157,7 @@ namespace Wit.Example_BWT901BLE
             this.dataRichTextBox.Location = new System.Drawing.Point(3, 17);
             this.dataRichTextBox.Name = "dataRichTextBox";
             this.dataRichTextBox.ReadOnly = true;
+            this.dataRichTextBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
             this.dataRichTextBox.Size = new System.Drawing.Size(778, 230);
             this.dataRichTextBox.TabIndex = 0;
             this.dataRichTextBox.Text = "";
@@ -178,6 +179,7 @@ namespace Wit.Example_BWT901BLE
             this.cameraLogRichTextBox.Location = new System.Drawing.Point(3, 17);
             this.cameraLogRichTextBox.Name = "cameraLogRichTextBox";
             this.cameraLogRichTextBox.ReadOnly = true;
+            this.cameraLogRichTextBox.ScrollBars = System.Windows.Forms.RichTextBoxScrollBars.Vertical;
             this.cameraLogRichTextBox.Size = new System.Drawing.Size(778, 326);
             this.cameraLogRichTextBox.TabIndex = 0;
             this.cameraLogRichTextBox.Text = "";
@@ -188,11 +190,11 @@ namespace Wit.Example_BWT901BLE
             this.leftTableLayout.ColumnCount = 1;
             this.leftTableLayout.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
             this.leftTableLayout.RowCount = 5;
-            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 16F));
-            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 11F));
-            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 33F));
-            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 18F));
             this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 22F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 10F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 17F));
+            this.leftTableLayout.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 21F));
             this.leftTableLayout.Controls.Add(this.groupBoxConnection, 0, 0);
             this.leftTableLayout.Controls.Add(this.groupBoxSampling, 0, 1);
             this.leftTableLayout.Controls.Add(this.groupBoxSettings, 0, 2);
@@ -268,7 +270,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── cameraLabel ──
             this.cameraLabel.AutoSize = true;
-            this.cameraLabel.Location = new System.Drawing.Point(10, 74);
+            this.cameraLabel.Location = new System.Drawing.Point(10, 70);
             this.cameraLabel.Name = "cameraLabel";
             this.cameraLabel.Size = new System.Drawing.Size(32, 13);
             this.cameraLabel.TabIndex = 4;
@@ -276,14 +278,14 @@ namespace Wit.Example_BWT901BLE
 
             // ── cameraStatusLight ──
             this.cameraStatusLight.BackColor = System.Drawing.Color.Gray;
-            this.cameraStatusLight.Location = new System.Drawing.Point(75, 74);
+            this.cameraStatusLight.Location = new System.Drawing.Point(75, 70);
             this.cameraStatusLight.Name = "cameraStatusLight";
             this.cameraStatusLight.Size = new System.Drawing.Size(16, 16);
             this.cameraStatusLight.TabIndex = 5;
 
             // ── cameraIpTextBox ──
             this.cameraIpTextBox.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) | System.Windows.Forms.AnchorStyles.Right)));
-            this.cameraIpTextBox.Location = new System.Drawing.Point(10, 98);
+            this.cameraIpTextBox.Location = new System.Drawing.Point(10, 92);
             this.cameraIpTextBox.Name = "cameraIpTextBox";
             this.cameraIpTextBox.Size = new System.Drawing.Size(120, 20);
             this.cameraIpTextBox.TabIndex = 6;
@@ -291,7 +293,7 @@ namespace Wit.Example_BWT901BLE
 
             // ── cameraConnectButton ──
             this.cameraConnectButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.cameraConnectButton.Location = new System.Drawing.Point(135, 97);
+            this.cameraConnectButton.Location = new System.Drawing.Point(135, 91);
             this.cameraConnectButton.Name = "cameraConnectButton";
             this.cameraConnectButton.Size = new System.Drawing.Size(70, 24);
             this.cameraConnectButton.TabIndex = 7;
@@ -781,3 +783,4 @@ namespace Wit.Example_BWT901BLE
         private System.Windows.Forms.Label versionLabel;
     }
 }
+

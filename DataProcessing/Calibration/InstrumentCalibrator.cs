@@ -1,6 +1,6 @@
 using System;
 
-namespace Wit.Example_BWT901BLE.DataProcessing.Calibration
+namespace dsat.DataProcessing.Calibration
 {
     public class InstrumentCalibrator
     {
@@ -33,3 +33,4 @@ namespace Wit.Example_BWT901BLE.DataProcessing.Calibration
         }
     }
 }
+

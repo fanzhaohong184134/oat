@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
+namespace dsat.DataProcessing.PostProcessing
 {
     public static class StabilityFilter
     {
@@ -47,3 +47,4 @@ namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
         }
     }
 }
+

@@ -1,7 +1,7 @@
 using System;
-using Wit.Example_BWT901BLE.DataProcessing.Calibration;
+using dsat.DataProcessing.Calibration;
 
-namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
+namespace dsat.DataProcessing.PostProcessing
 {
     public static class OffsetCalculator
     {
@@ -29,3 +29,4 @@ namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
         }
     }
 }
+

@@ -1,8 +1,8 @@
 // Auto-generated during build - do not edit
-namespace Wit.Example_BWT901BLE
+namespace dsat
 {
     static class GitVersion
     {
-        public const string CommitHash = "f8cd28e";
+        public const string CommitHash = "a78a20f";
     }
 }

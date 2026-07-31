@@ -1,6 +1,6 @@
 using System;
 
-namespace Wit.Example_BWT901BLE.Sampling
+namespace dsat.Sampling
 {
     /// <summary>
     /// 采样记录数据结构

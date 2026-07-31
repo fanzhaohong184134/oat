@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A1B2C3D4-1111-2222-3333-666677778888}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Wit.Example_BWT901BLE.PostProcessingApp</RootNamespace>
+    <RootNamespace>dsat.PostProcessingApp</RootNamespace>
     <AssemblyName>PostProcessing</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <LangVersion>8.0</LangVersion>
@@ -54,3 +54,4 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
+

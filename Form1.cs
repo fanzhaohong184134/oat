@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,13 +14,13 @@ using Wit.SDK.Modular.WitSensorApi.Modular.BWT901BLE;
 using Wit.SDK.Device.Device.Device.DKey;
 using Wit.Bluetooth.WinBlue.Utils;
 using Wit.Bluetooth.WinBlue.Interface;
-using Wit.Example_BWT901BLE.Sampling;
-using Wit.Example_BWT901BLE.Camera;
-using Wit.Example_BWT901BLE.CalibrationPanels;
-using Wit.Example_BWT901BLE.DataProcessing.Calibration;
-using Wit.Example_BWT901BLE.DataProcessing.PostProcessing;
+using dsat.Sampling;
+using dsat.Camera;
+using dsat.CalibrationPanels;
+using dsat.DataProcessing.Calibration;
+using dsat.DataProcessing.PostProcessing;
 
-namespace Wit.Example_BWT901BLE
+namespace dsat
 {   
     /// <summary>
     /// 程序主窗口
@@ -38,6 +39,30 @@ namespace Wit.Example_BWT901BLE
     /// </summary>
     public partial class Form1 : Form
     {
+        private static readonly Color ThemeAppBackground = Color.FromArgb(233, 238, 236);
+        private static readonly Color ThemePanelBackground = Color.FromArgb(248, 250, 247);
+        private static readonly Color ThemeBorder = Color.FromArgb(102, 124, 143);
+        private static readonly Color ThemeTitle = Color.FromArgb(30, 56, 77);
+        private static readonly Color ThemeText = Color.FromArgb(35, 52, 64);
+        private static readonly Color ThemeButton = Color.FromArgb(48, 94, 127);
+        private static readonly Color ThemeButtonHover = Color.FromArgb(62, 112, 148);
+        private static readonly Color ThemeButtonActive = Color.FromArgb(53, 122, 58);
+        private static readonly Color ThemeAccentButton = Color.FromArgb(190, 96, 28);
+        private static readonly Color ThemeInputBack = Color.FromArgb(254, 255, 252);
+        private static readonly Color ThemeWarn = Color.FromArgb(189, 97, 22);
+        private static readonly Color ThemeError = Color.FromArgb(160, 43, 43);
+        private const int CameraLogMaxLines = 1400;
+        private const int CameraLogTrimToLines = 1100;
+
+        private Label _cameraAlertBanner;
+        private Label _sensorAlertBanner;
+        private Panel _cameraAlertPanel;
+        private Panel _sensorAlertPanel;
+        private Button _cameraAlertClearButton;
+        private Button _sensorAlertClearButton;
+        private System.Windows.Forms.Timer _cameraAlertAutoClearTimer;
+        private System.Windows.Forms.Timer _sensorAlertAutoClearTimer;
+
 
         /// <summary>
         /// 蓝牙管理器
@@ -147,6 +172,8 @@ namespace Wit.Example_BWT901BLE
             versionLabel.Text = string.Empty;
             versionLabel.Visible = false;
 
+            ApplySurveyingTheme();
+
             // 初始化 device_info 目录与默认设备编号
             var pathService = new CalibrationPathService(AppDomain.CurrentDomain.BaseDirectory);
             string deviceId = pathService.EnsureAndPersistDeviceId(pathService.GetDefaultDeviceId());
@@ -175,19 +202,18 @@ namespace Wit.Example_BWT901BLE
             groupBoxSettings.Paint += GroupBoxHeader_Paint;
             groupBoxCalibration.Paint += GroupBoxHeader_Paint;
             groupBoxDataProcessing.Paint += GroupBoxHeader_Paint;
+            groupBoxSensorData.Paint += GroupBoxHeader_Paint;
+            groupBoxCameraLog.Paint += GroupBoxHeader_Paint;
             baseFileNameTextBox.Text = _cameraManager.BaseFileName;
 
-            // 记录各GroupBox内控件的初始Y位置比例，用于垂直等比缩放
-            InitLayoutRatios(groupBoxConnection);
-            InitLayoutRatios(groupBoxSampling);
-            InitLayoutRatios(groupBoxSettings);
-            InitLayoutRatios(groupBoxCalibration);
-            InitLayoutRatios(groupBoxDataProcessing);
-            groupBoxConnection.Resize += GroupBox_Resize;
-            groupBoxSampling.Resize += GroupBox_Resize;
-            groupBoxSettings.Resize += GroupBox_Resize;
-            groupBoxCalibration.Resize += GroupBox_Resize;
-            groupBoxDataProcessing.Resize += GroupBox_Resize;
+            ApplyStatusLightStyling(sensorStatusLight);
+            ApplyStatusLightStyling(cameraStatusLight);
+            HarmonizeKeyButtonLayout();
+            imuSamplingButton.Text = "IMU采样";
+            ApplyAdaptiveLeftLayout();
+            leftTableLayout.Resize += (s, args) => ApplyAdaptiveLeftLayout();
+            InitializeAlertBanners();
+            InitializeLogLegends();
 
             // 开启数据刷新线程
             // Enable data refresh thread
@@ -195,6 +221,318 @@ namespace Wit.Example_BWT901BLE
             thread.IsBackground = true;
             EnableRefreshDataTh = true;
             thread.Start();
+        }
+
+        private void InitializeAlertBanners()
+        {
+            _cameraAlertAutoClearTimer = new System.Windows.Forms.Timer { Interval = 30000 };
+            _cameraAlertAutoClearTimer.Tick += (s, e) =>
+            {
+                _cameraAlertAutoClearTimer.Stop();
+                ResetCameraAlertBanner();
+            };
+
+            _sensorAlertAutoClearTimer = new System.Windows.Forms.Timer { Interval = 30000 };
+            _sensorAlertAutoClearTimer.Tick += (s, e) =>
+            {
+                _sensorAlertAutoClearTimer.Stop();
+                ResetSensorAlertBanner();
+            };
+
+            _cameraAlertPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 24,
+                BackColor = Color.FromArgb(242, 246, 244)
+            };
+
+            _cameraAlertClearButton = new Button
+            {
+                Dock = DockStyle.Right,
+                Width = 54,
+                Text = "清除",
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(224, 232, 228),
+                ForeColor = ThemeTitle,
+                Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Bold, GraphicsUnit.Point)
+            };
+            _cameraAlertClearButton.FlatAppearance.BorderSize = 1;
+            _cameraAlertClearButton.FlatAppearance.BorderColor = ThemeBorder;
+            _cameraAlertClearButton.Click += (s, e) => ResetCameraAlertBanner();
+
+            _cameraAlertBanner = new Label
+            {
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 0, 0),
+                ForeColor = ThemeText
+            };
+
+            _cameraAlertPanel.Controls.Add(_cameraAlertBanner);
+            _cameraAlertPanel.Controls.Add(_cameraAlertClearButton);
+
+            _sensorAlertPanel = new Panel
+            {
+                Dock = DockStyle.Top,
+                Height = 24,
+                BackColor = Color.FromArgb(242, 246, 244)
+            };
+
+            _sensorAlertClearButton = new Button
+            {
+                Dock = DockStyle.Right,
+                Width = 54,
+                Text = "清除",
+                FlatStyle = FlatStyle.Flat,
+                BackColor = Color.FromArgb(224, 232, 228),
+                ForeColor = ThemeTitle,
+                Font = new Font("Microsoft YaHei UI", 8.5F, FontStyle.Bold, GraphicsUnit.Point)
+            };
+            _sensorAlertClearButton.FlatAppearance.BorderSize = 1;
+            _sensorAlertClearButton.FlatAppearance.BorderColor = ThemeBorder;
+            _sensorAlertClearButton.Click += (s, e) => ResetSensorAlertBanner();
+
+            _sensorAlertBanner = new Label
+            {
+                Dock = DockStyle.Fill,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 0, 0),
+                ForeColor = ThemeText
+            };
+
+            _sensorAlertPanel.Controls.Add(_sensorAlertBanner);
+            _sensorAlertPanel.Controls.Add(_sensorAlertClearButton);
+
+            ResetCameraAlertBanner();
+            ResetSensorAlertBanner();
+
+            groupBoxCameraLog.Controls.Add(_cameraAlertPanel);
+            groupBoxCameraLog.Controls.SetChildIndex(_cameraAlertPanel, 0);
+            groupBoxSensorData.Controls.Add(_sensorAlertPanel);
+            groupBoxSensorData.Controls.SetChildIndex(_sensorAlertPanel, 0);
+        }
+
+        private void ResetCameraAlertBanner()
+        {
+            if (_cameraAlertBanner == null) return;
+            _cameraAlertBanner.Text = "告警: 无";
+            _cameraAlertBanner.ForeColor = ThemeText;
+            if (_cameraAlertPanel != null)
+                _cameraAlertPanel.BackColor = Color.FromArgb(242, 246, 244);
+            if (_cameraAlertAutoClearTimer != null)
+                _cameraAlertAutoClearTimer.Stop();
+        }
+
+        private void ResetSensorAlertBanner()
+        {
+            if (_sensorAlertBanner == null) return;
+            _sensorAlertBanner.Text = "状态: 正常";
+            _sensorAlertBanner.ForeColor = Color.FromArgb(33, 110, 52);
+            if (_sensorAlertPanel != null)
+                _sensorAlertPanel.BackColor = Color.FromArgb(232, 246, 235);
+            if (_sensorAlertAutoClearTimer != null)
+                _sensorAlertAutoClearTimer.Stop();
+        }
+
+        private void ApplyStatusLightStyling(Panel light)
+        {
+            light.Size = new Size(16, 16);
+            light.Paint -= StatusLight_Paint;
+            light.Paint += StatusLight_Paint;
+            light.BackColorChanged -= StatusLight_BackColorChanged;
+            light.BackColorChanged += StatusLight_BackColorChanged;
+        }
+
+        private void StatusLight_BackColorChanged(object sender, EventArgs e)
+        {
+            Panel panel = sender as Panel;
+            if (panel != null) panel.Invalidate();
+        }
+
+        private void StatusLight_Paint(object sender, PaintEventArgs e)
+        {
+            Panel light = sender as Panel;
+            if (light == null) return;
+
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Rectangle ring = new Rectangle(1, 1, light.Width - 3, light.Height - 3);
+            Rectangle fill = new Rectangle(3, 3, light.Width - 7, light.Height - 7);
+
+            using (SolidBrush fillBrush = new SolidBrush(light.BackColor))
+            using (Pen ringPen = new Pen(ThemeBorder, 2f))
+            {
+                e.Graphics.FillEllipse(fillBrush, fill);
+                e.Graphics.DrawEllipse(ringPen, ring);
+            }
+        }
+
+        private void HarmonizeKeyButtonLayout()
+        {
+            Button[] keyButtons =
+            {
+                sensorConnectButton, cameraConnectButton,
+                imuSamplingButton, cameraSamplingButton,
+                showPreviewButton, processButton,
+                magCalibrationButton, appliedCalibrationButton, chipTimeCalibrationButton,
+                cameraCalibButton, mountingCalibButton, instrumentCalibButton
+            };
+
+            foreach (Button btn in keyButtons)
+            {
+                btn.Height = 28;
+            }
+
+            int dualButtonWidth = 102;
+            imuSamplingButton.Width = dualButtonWidth;
+            cameraSamplingButton.Width = dualButtonWidth;
+            magCalibrationButton.Width = dualButtonWidth;
+            appliedCalibrationButton.Width = dualButtonWidth;
+            chipTimeCalibrationButton.Width = dualButtonWidth;
+            cameraCalibButton.Width = dualButtonWidth;
+            mountingCalibButton.Width = dualButtonWidth;
+            instrumentCalibButton.Width = dualButtonWidth;
+            sensorConnectButton.Width = 74;
+            cameraConnectButton.Width = 74;
+        }
+
+        private void ApplyAdaptiveLeftLayout()
+        {
+            if (leftTableLayout == null || leftTableLayout.RowStyles.Count < 5) return;
+
+            GroupBox[] groups =
+            {
+                groupBoxConnection,
+                groupBoxSampling,
+                groupBoxSettings,
+                groupBoxCalibration,
+                groupBoxDataProcessing
+            };
+
+            int[] minHeights = groups.Select(g => CalculateGroupMinimumHeight(g)).ToArray();
+            int totalMin = minHeights.Sum();
+            int available = Math.Max(0, leftTableLayout.ClientSize.Height);
+            int extra = Math.Max(0, available - totalMin);
+
+            double[] weights = { 1.2, 0.7, 1.6, 1.0, 1.5 };
+            double weightSum = weights.Sum();
+
+            for (int i = 0; i < groups.Length; i++)
+            {
+                int bonus = (int)Math.Round(extra * (weights[i] / weightSum));
+                int targetHeight = minHeights[i] + bonus;
+                groups[i].MinimumSize = new Size(0, minHeights[i]);
+                leftTableLayout.RowStyles[i].SizeType = SizeType.Absolute;
+                leftTableLayout.RowStyles[i].Height = targetHeight;
+            }
+        }
+
+        private static int CalculateGroupMinimumHeight(GroupBox group)
+        {
+            int maxBottom = 0;
+            foreach (Control c in group.Controls)
+            {
+                maxBottom = Math.Max(maxBottom, c.Bottom);
+            }
+
+            int titleAndPadding = group.Font.Height + 18;
+            return Math.Max(78, maxBottom + titleAndPadding);
+        }
+
+        private void ApplySurveyingTheme()
+        {
+            SuspendLayout();
+
+            Font uiFont = new Font("Microsoft YaHei UI", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
+            Font sectionFont = new Font("Microsoft YaHei UI", 10F, FontStyle.Bold, GraphicsUnit.Point);
+            Font codeFont = new Font("Consolas", 9.75F, FontStyle.Regular, GraphicsUnit.Point);
+
+            BackColor = ThemeAppBackground;
+            ForeColor = ThemeText;
+            Font = uiFont;
+
+            leftPanel.BackColor = ThemeAppBackground;
+            mainSplitContainer.BackColor = ThemeAppBackground;
+            splitContainer.BackColor = ThemeAppBackground;
+
+            ApplyThemeRecursive(this, uiFont, sectionFont, codeFont);
+
+            imuSettingsHeaderLabel.Font = sectionFont;
+            cameraSettingsHeaderLabel.Font = sectionFont;
+            imuSettingsHeaderLabel.ForeColor = ThemeTitle;
+            cameraSettingsHeaderLabel.ForeColor = ThemeTitle;
+
+            StyleActionButton(processButton, true);
+
+            ResumeLayout();
+        }
+
+        private void ApplyThemeRecursive(Control parent, Font uiFont, Font sectionFont, Font codeFont)
+        {
+            foreach (Control ctrl in parent.Controls)
+            {
+                if (ctrl is GroupBox)
+                {
+                    GroupBox group = (GroupBox)ctrl;
+                    group.BackColor = ThemePanelBackground;
+                    group.ForeColor = ThemeTitle;
+                    group.Font = sectionFont;
+                }
+                else if (ctrl is Button)
+                {
+                    StyleActionButton((Button)ctrl, false);
+                }
+                else if (ctrl is TextBox)
+                {
+                    TextBox tb = (TextBox)ctrl;
+                    tb.Font = uiFont;
+                    tb.BorderStyle = BorderStyle.FixedSingle;
+                    tb.BackColor = ThemeInputBack;
+                    tb.ForeColor = ThemeText;
+                }
+                else if (ctrl is ComboBox)
+                {
+                    ComboBox cb = (ComboBox)ctrl;
+                    cb.Font = uiFont;
+                    cb.BackColor = ThemeInputBack;
+                    cb.ForeColor = ThemeText;
+                }
+                else if (ctrl is RichTextBox)
+                {
+                    RichTextBox rb = (RichTextBox)ctrl;
+                    rb.Font = codeFont;
+                    rb.BackColor = ThemeInputBack;
+                    rb.ForeColor = ThemeText;
+                    rb.BorderStyle = BorderStyle.FixedSingle;
+                }
+                else if (ctrl is Label)
+                {
+                    Label lbl = (Label)ctrl;
+                    lbl.Font = uiFont;
+                    lbl.ForeColor = ThemeText;
+                }
+                else if (ctrl is Panel)
+                {
+                    Panel panel = (Panel)ctrl;
+                    if (panel != sensorStatusLight && panel != cameraStatusLight)
+                        panel.BackColor = ThemePanelBackground;
+                }
+
+                if (ctrl.HasChildren)
+                    ApplyThemeRecursive(ctrl, uiFont, sectionFont, codeFont);
+            }
+        }
+
+        private void StyleActionButton(Button button, bool accent)
+        {
+            button.FlatStyle = FlatStyle.Flat;
+            button.FlatAppearance.BorderSize = 1;
+            button.FlatAppearance.BorderColor = ThemeBorder;
+            button.BackColor = accent ? ThemeAccentButton : ThemeButton;
+            button.ForeColor = Color.White;
+            button.Font = new Font("Microsoft YaHei UI", 9.5F, FontStyle.Bold, GraphicsUnit.Point);
+            button.UseVisualStyleBackColor = false;
+            button.FlatAppearance.MouseOverBackColor = accent ? Color.FromArgb(212, 115, 44) : ThemeButtonHover;
+            button.FlatAppearance.MouseDownBackColor = accent ? Color.FromArgb(165, 82, 22) : Color.FromArgb(42, 81, 110);
         }
 
         private void InitLayoutRatios(GroupBox gb)
@@ -770,7 +1108,7 @@ namespace Wit.Example_BWT901BLE
                 }
 
                 _isMagCalibrating = true;
-                magCalibrationButton.BackColor = Color.Green;
+                magCalibrationButton.BackColor = ThemeButtonActive;
                 magCalibrationButton.Text = "磁场校准中... (再次点击停止)";
                 MessageBox.Show("开始磁场校准,请绕传感器XYZ三轴各转一圈,转完以后再次点击按钮结束校准");
             }
@@ -799,7 +1137,7 @@ namespace Wit.Example_BWT901BLE
                 }
 
                 _isMagCalibrating = false;
-                magCalibrationButton.BackColor = SystemColors.Control;
+                magCalibrationButton.BackColor = ThemeButton;
                 magCalibrationButton.Text = "磁场校准";
             }
         }
@@ -877,7 +1215,7 @@ namespace Wit.Example_BWT901BLE
                     _isLogging = true;
                     _isImuSampling = true;
 
-                    imuSamplingButton.BackColor = Color.Green;
+                    imuSamplingButton.BackColor = ThemeButtonActive;
                     imuSamplingButton.Text = "IMU采样中...";
                 }
                 catch (Exception ex)
@@ -906,7 +1244,7 @@ namespace Wit.Example_BWT901BLE
                     _isLogging = false;
                     _isImuSampling = false;
 
-                    imuSamplingButton.BackColor = SystemColors.Control;
+                    imuSamplingButton.BackColor = ThemeButton;
                     imuSamplingButton.Text = "IMU采样";
                 }
                 catch (Exception ex)
@@ -959,7 +1297,7 @@ namespace Wit.Example_BWT901BLE
                 _cameraManager.StartCapture();
                 _isCameraSampling = true;
 
-                cameraSamplingButton.BackColor = Color.Green;
+                cameraSamplingButton.BackColor = ThemeButtonActive;
                 cameraSamplingButton.Text = "相机采样中...";
             }
             else
@@ -968,7 +1306,7 @@ namespace Wit.Example_BWT901BLE
                 _cameraManager.StopCapture();
                 _isCameraSampling = false;
 
-                cameraSamplingButton.BackColor = SystemColors.Control;
+                cameraSamplingButton.BackColor = ThemeButton;
                 cameraSamplingButton.Text = "相机采样";
             }
         }
@@ -1009,7 +1347,7 @@ namespace Wit.Example_BWT901BLE
             {
                 _cameraManager.StopPreview();
                 showPreviewButton.Text = "相机预览";
-                showPreviewButton.BackColor = SystemColors.Control;
+                showPreviewButton.BackColor = ThemeButton;
                 return;
             }
 
@@ -1021,7 +1359,7 @@ namespace Wit.Example_BWT901BLE
 
             _cameraManager.StartPreview(15);
             showPreviewButton.Text = "停止预览";
-            showPreviewButton.BackColor = Color.LightGreen;
+            showPreviewButton.BackColor = ThemeButtonActive;
         }
 
         /// <summary>
@@ -1034,29 +1372,24 @@ namespace Wit.Example_BWT901BLE
 
             Size textSize = TextRenderer.MeasureText(gb.Text, gb.Font);
             int textLeft = (gb.Width - textSize.Width) / 2;
-            int textTop = (20 - textSize.Height) / 2;
+            int borderTop = (textSize.Height / 2) + 2;
+            int textTop = 0;
 
-            // 绘制边框线（上方中间断开放文字）
-            using (Pen pen = new Pen(SystemColors.ControlDark))
+            // 测绘外业主题：高对比边框与加粗标题，强光下可读性更好。
+            using (Pen pen = new Pen(ThemeBorder, 2F))
             {
-                // 左边线段
-                e.Graphics.DrawLine(pen, 0, 7, textLeft - 4, 7);
-                // 右边线段
-                e.Graphics.DrawLine(pen, textLeft + textSize.Width + 4, 7, gb.Width, 7);
-                // 左竖线
-                e.Graphics.DrawLine(pen, 0, 7, 0, gb.Height - 1);
-                // 右竖线
-                e.Graphics.DrawLine(pen, gb.Width - 1, 7, gb.Width - 1, gb.Height - 1);
-                // 底边线
-                e.Graphics.DrawLine(pen, 0, gb.Height - 1, gb.Width - 1, gb.Height - 1);
+                e.Graphics.DrawLine(pen, 1, borderTop, textLeft - 6, borderTop);
+                e.Graphics.DrawLine(pen, textLeft + textSize.Width + 6, borderTop, gb.Width - 2, borderTop);
+                e.Graphics.DrawLine(pen, 1, borderTop, 1, gb.Height - 2);
+                e.Graphics.DrawLine(pen, gb.Width - 2, borderTop, gb.Width - 2, gb.Height - 2);
+                e.Graphics.DrawLine(pen, 1, gb.Height - 2, gb.Width - 2, gb.Height - 2);
             }
 
-            // 居中绘制加粗黑色标题
             using (Font boldFont = new Font(gb.Font, FontStyle.Bold))
             {
                 TextRenderer.DrawText(e.Graphics, gb.Text, boldFont,
                     new Rectangle(textLeft, textTop, textSize.Width, textSize.Height),
-                    Color.Black,
+                    ThemeTitle,
                     TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
             }
         }
@@ -1073,16 +1406,14 @@ namespace Wit.Example_BWT901BLE
                 {
                     cameraLogRichTextBox.Invoke(new Action(() =>
                     {
-                        cameraLogRichTextBox.AppendText(record.ToString() + "\n");
-                        cameraLogRichTextBox.ScrollToCaret();
+                        AppendCameraLogLine(record.ToString(), false);
                     }));
                 }
 
 
                 else
                 {
-                    cameraLogRichTextBox.AppendText(record.ToString() + "\n");
-                    cameraLogRichTextBox.ScrollToCaret();
+                    AppendCameraLogLine(record.ToString(), false);
                 }
             }
             catch { }
@@ -1116,14 +1447,12 @@ namespace Wit.Example_BWT901BLE
                 {
                     cameraLogRichTextBox.Invoke(new Action(() =>
                     {
-                        cameraLogRichTextBox.AppendText("[状态] " + status + "\n");
-                        cameraLogRichTextBox.ScrollToCaret();
+                        AppendCameraLogLine("[状态] " + status, true);
                     }));
                 }
                 else
                 {
-                    cameraLogRichTextBox.AppendText("[状态] " + status + "\n");
-                    cameraLogRichTextBox.ScrollToCaret();
+                    AppendCameraLogLine("[状态] " + status, true);
                 }
 
                 if (_previewForm != null)
@@ -1135,16 +1464,215 @@ namespace Wit.Example_BWT901BLE
                     && showPreviewButton.Text == "停止预览")
                 {
                     showPreviewButton.Text = "相机预览";
-                    showPreviewButton.BackColor = SystemColors.Control;
+                    showPreviewButton.BackColor = ThemeButton;
                 }
 
                 if (!_cameraManager.IsPreviewRunning && showPreviewButton.Text == "停止预览")
                 {
                     showPreviewButton.Text = "相机预览";
-                    showPreviewButton.BackColor = SystemColors.Control;
+                    showPreviewButton.BackColor = ThemeButton;
                 }
             }
             catch { }
+        }
+
+        private void AppendCameraLogLine(string line, bool isStatus)
+        {
+            Color color = ThemeText;
+            bool isError = false;
+            bool isWarn = false;
+            if (line.Contains("失败") || line.Contains("错误") || line.Contains("超时") || line.Contains("未找到"))
+            {
+                color = ThemeError;
+                isError = true;
+            }
+            else if (line.Contains("警告") || line.Contains("重试") || line.Contains("等待"))
+            {
+                color = ThemeWarn;
+                isWarn = true;
+            }
+            else if (line.Contains("成功") || line.Contains("开始") || line.Contains("启动") || line.Contains("已拍摄"))
+            {
+                color = Color.FromArgb(33, 110, 52);
+            }
+            else if (isStatus)
+            {
+                color = ThemeTitle;
+            }
+
+            cameraLogRichTextBox.SelectionStart = cameraLogRichTextBox.TextLength;
+            cameraLogRichTextBox.SelectionLength = 0;
+            cameraLogRichTextBox.SelectionColor = color;
+            cameraLogRichTextBox.AppendText(line + "\n");
+            cameraLogRichTextBox.SelectionColor = cameraLogRichTextBox.ForeColor;
+            cameraLogRichTextBox.ScrollToCaret();
+
+            if (isError || isWarn)
+                UpdateCameraAlertBanner(line, isError);
+
+            TrimRichTextBoxLines(cameraLogRichTextBox, CameraLogMaxLines, CameraLogTrimToLines);
+        }
+
+        private void UpdateCameraAlertBanner(string line, bool isError)
+        {
+            if (_cameraAlertBanner == null) return;
+
+            string time = DateTime.Now.ToString("HH:mm:ss");
+            _cameraAlertBanner.Text = string.Format("告警置顶 [{0}] {1}", time, line);
+            _cameraAlertBanner.ForeColor = isError ? ThemeError : ThemeWarn;
+            if (_cameraAlertPanel != null)
+                _cameraAlertPanel.BackColor = isError ? Color.FromArgb(252, 232, 232) : Color.FromArgb(253, 241, 223);
+
+            if (_cameraAlertAutoClearTimer != null)
+            {
+                _cameraAlertAutoClearTimer.Stop();
+                _cameraAlertAutoClearTimer.Start();
+            }
+        }
+
+        private static void TrimRichTextBoxLines(RichTextBox box, int maxLines, int trimToLines)
+        {
+            if (box.Lines.Length <= maxLines) return;
+
+            int removeLineCount = box.Lines.Length - trimToLines;
+            if (removeLineCount <= 0) return;
+
+            string text = box.Text;
+            int removeIndex = 0;
+            int removed = 0;
+            while (removeIndex < text.Length && removed < removeLineCount)
+            {
+                if (text[removeIndex] == '\n')
+                {
+                    removed++;
+                }
+                removeIndex++;
+            }
+
+            if (removeIndex > 0)
+            {
+                box.Select(0, removeIndex);
+                box.SelectedText = string.Empty;
+            }
+        }
+
+        private void InitializeLogLegends()
+        {
+            cameraLogRichTextBox.Clear();
+            AppendLegendHeader(cameraLogRichTextBox, "图例: ");
+            AppendLegendDotItem(cameraLogRichTextBox, "信息", ThemeText);
+            AppendLegendDotItem(cameraLogRichTextBox, "状态", ThemeTitle);
+            AppendLegendDotItem(cameraLogRichTextBox, "成功", Color.FromArgb(33, 110, 52));
+            AppendLegendDotItem(cameraLogRichTextBox, "告警", ThemeWarn);
+            AppendLegendDotItem(cameraLogRichTextBox, "错误", ThemeError);
+            cameraLogRichTextBox.AppendText("\n");
+        }
+
+        private void AppendLegendHeader(RichTextBox box, string text)
+        {
+            box.SelectionStart = box.TextLength;
+            box.SelectionLength = 0;
+            box.SelectionColor = ThemeTitle;
+            box.AppendText(text);
+            box.SelectionColor = box.ForeColor;
+        }
+
+        private void AppendLegendDotItem(RichTextBox box, string name, Color color)
+        {
+            box.SelectionStart = box.TextLength;
+            box.SelectionLength = 0;
+            box.SelectionColor = color;
+            box.AppendText("● ");
+            box.SelectionColor = ThemeText;
+            box.AppendText(name + "  ");
+            box.SelectionColor = box.ForeColor;
+        }
+
+        private void RenderSensorData(string data)
+        {
+            dataRichTextBox.SuspendLayout();
+            dataRichTextBox.Clear();
+
+            bool hasWarn = false;
+            bool hasSearching = false;
+
+            dataRichTextBox.SelectionStart = dataRichTextBox.TextLength;
+            dataRichTextBox.SelectionLength = 0;
+            dataRichTextBox.SelectionColor = ThemeTitle;
+            dataRichTextBox.AppendText("图例: ");
+            dataRichTextBox.SelectionColor = dataRichTextBox.ForeColor;
+            AppendLegendDotItem(dataRichTextBox, "普通", ThemeText);
+            AppendLegendDotItem(dataRichTextBox, "计数", Color.FromArgb(33, 110, 52));
+            AppendLegendDotItem(dataRichTextBox, "告警", ThemeWarn);
+            AppendLegendDotItem(dataRichTextBox, "分隔", ThemeBorder);
+            dataRichTextBox.AppendText("\n");
+
+            string[] lines = data.Replace("\r", string.Empty).Split('\n');
+            foreach (string rawLine in lines)
+            {
+                string line = rawLine;
+                if (line.Length == 0) continue;
+
+                Color color;
+                if (line.StartsWith("设备:"))
+                    color = ThemeTitle;
+                else if (line.StartsWith("推送计数:"))
+                    color = Color.FromArgb(33, 110, 52);
+                else if (line.StartsWith("状态:") && line.Contains("GATT连接中"))
+                {
+                    color = ThemeWarn;
+                    hasWarn = true;
+                }
+                else if (line.Contains("正在搜索传感器"))
+                {
+                    color = ThemeWarn;
+                    hasSearching = true;
+                }
+                else if (line.Contains("════════") || line.Contains("────────────────"))
+                    color = ThemeBorder;
+                else
+                    color = ThemeText;
+
+                dataRichTextBox.SelectionStart = dataRichTextBox.TextLength;
+                dataRichTextBox.SelectionLength = 0;
+                dataRichTextBox.SelectionColor = color;
+                dataRichTextBox.AppendText(line + "\n");
+            }
+
+            dataRichTextBox.SelectionColor = dataRichTextBox.ForeColor;
+            dataRichTextBox.ResumeLayout();
+
+            if (_sensorAlertBanner != null)
+            {
+                if (hasWarn)
+                {
+                    _sensorAlertBanner.Text = "状态: 设备连接中，请等待稳定数据";
+                    _sensorAlertBanner.ForeColor = ThemeWarn;
+                    if (_sensorAlertPanel != null)
+                        _sensorAlertPanel.BackColor = Color.FromArgb(253, 241, 223);
+                    if (_sensorAlertAutoClearTimer != null)
+                    {
+                        _sensorAlertAutoClearTimer.Stop();
+                        _sensorAlertAutoClearTimer.Start();
+                    }
+                }
+                else if (hasSearching)
+                {
+                    _sensorAlertBanner.Text = "状态: 正在搜索传感器";
+                    _sensorAlertBanner.ForeColor = ThemeWarn;
+                    if (_sensorAlertPanel != null)
+                        _sensorAlertPanel.BackColor = Color.FromArgb(253, 241, 223);
+                    if (_sensorAlertAutoClearTimer != null)
+                    {
+                        _sensorAlertAutoClearTimer.Stop();
+                        _sensorAlertAutoClearTimer.Start();
+                    }
+                }
+                else
+                {
+                    ResetSensorAlertBanner();
+                }
+            }
         }
 
         /// <summary>
@@ -1238,7 +1766,7 @@ namespace Wit.Example_BWT901BLE
                     {
                         dataRichTextBox.Invoke(new Action(() =>
                         {
-                            dataRichTextBox.Text = DeviceData;
+                            RenderSensorData(DeviceData);
                             // 更新日志计数显示
                             if (_isLogging && _samplingLogger != null)
                             {
@@ -1405,3 +1933,4 @@ namespace Wit.Example_BWT901BLE
         }
     }
 }
+

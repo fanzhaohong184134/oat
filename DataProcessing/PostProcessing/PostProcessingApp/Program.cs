@@ -1,9 +1,9 @@
 using System;
 using System.IO;
-using Wit.Example_BWT901BLE.DataProcessing.Calibration;
-using Wit.Example_BWT901BLE.DataProcessing.PostProcessing;
+using dsat.DataProcessing.Calibration;
+using dsat.DataProcessing.PostProcessing;
 
-namespace Wit.Example_BWT901BLE.PostProcessingApp
+namespace dsat.PostProcessingApp
 {
     class Program
     {
@@ -90,3 +90,4 @@ namespace Wit.Example_BWT901BLE.PostProcessingApp
         }
     }
 }
+

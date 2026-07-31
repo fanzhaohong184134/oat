@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using Windows.Devices.Bluetooth;
 using Windows.Devices.Bluetooth.GenericAttributeProfile;
 using Windows.Foundation;
@@ -52,7 +48,8 @@ namespace Wit.Bluetooth.WinBlue
         private WinBleOption Config;
 
         // 特性通知类型通知启用
-        private const GattClientCharacteristicConfigurationDescriptorValue CHARACTERISTIC_NOTIFICATION_TYPE = GattClientCharacteristicConfigurationDescriptorValue.Notify;
+        private const GattClientCharacteristicConfigurationDescriptorValue CHARACTERISTIC_NOTIFICATION_TYPE =
+            GattClientCharacteristicConfigurationDescriptorValue.Notify;
 
         /// <summary>
         /// 构造
@@ -61,26 +58,30 @@ namespace Wit.Bluetooth.WinBlue
         public WinBlueClient(WinBleOption config)
         {
             Config = config;
-            bluetoothManager = WinBlueFactory.GetInstance(); ;
+            bluetoothManager = WinBlueFactory.GetInstance();
         }
 
         /// <summary>
         /// 按MAC地址直接组装设备ID查找设备
         /// </summary>
-        /// <param name="MAC"></param>
-        /// <returns></returns>
-        public async Task Connect()
+        public void Connect()
         {
             BluetoothDevice = bluetoothManager.GetDevice(Config.Mac);
+            if (BluetoothDevice == null)
+            {
+                OnReceive?.Invoke(BluetoothEvent.Disconnected, Config.Mac);
+                return;
+            }
+
             // 连接状态改变事件
             BluetoothDevice.ConnectionStatusChanged -= CurrentDevice_ConnectionStatusChanged;
             BluetoothDevice.ConnectionStatusChanged += CurrentDevice_ConnectionStatusChanged;
             Guid guid = new Guid(Config.ServiceGuid);
 
             // 连接中
-            OnReceive(BluetoothEvent.Connecting, Config.Mac);
+            OnReceive?.Invoke(BluetoothEvent.Connecting, Config.Mac);
 
-            BluetoothDevice.GetGattServicesForUuidAsync(guid).Completed = async (asyncInfo, asyncStatus) =>
+            BluetoothDevice.GetGattServicesForUuidAsync(guid).Completed = (asyncInfo, asyncStatus) =>
             {
                 if (asyncStatus == AsyncStatus.Completed)
                 {
@@ -92,8 +93,8 @@ namespace Wit.Bluetooth.WinBlue
                             CurrentService = result.Services[0];
                             if (CurrentService != null)
                             {
-                                await GetCurrentWriteCharacteristic();
-                                await GetCurrentNotifyCharacteristic();
+                                GetCurrentWriteCharacteristic();
+                                GetCurrentNotifyCharacteristic();
                             }
                             IsConnect = true;
                         }
@@ -110,31 +111,27 @@ namespace Wit.Bluetooth.WinBlue
         /// <summary>
         /// 连接状态改变事件
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
         private void CurrentDevice_ConnectionStatusChanged(BluetoothLEDevice sender, object args)
         {
             if (sender.ConnectionStatus == BluetoothConnectionStatus.Connected)
             {
-                string msg = "设备已连接";
-                OnReceive(BluetoothEvent.Connected, Config.Mac);
+                OnReceive?.Invoke(BluetoothEvent.Connected, Config.Mac);
             }
             else
             {
-                OnReceive(BluetoothEvent.Disconnected, Config.Mac);
+                OnReceive?.Invoke(BluetoothEvent.Disconnected, Config.Mac);
             }
         }
 
         /// <summary>
         /// 设置写特征对象。
         /// </summary>
-        /// <returns></returns>
-        public async Task GetCurrentWriteCharacteristic()
+        public void GetCurrentWriteCharacteristic()
         {
             if (CurrentService == null) return;
             Guid guid = new Guid(Config.WriteGuid);
 
-            CurrentService.GetCharacteristicsForUuidAsync(guid).Completed = async (asyncInfo, asyncStatus) =>
+            CurrentService.GetCharacteristicsForUuidAsync(guid).Completed = (asyncInfo, asyncStatus) =>
             {
                 if (asyncStatus == AsyncStatus.Completed)
                 {
@@ -155,12 +152,11 @@ namespace Wit.Bluetooth.WinBlue
         /// <summary>
         /// 设置通知特征对象。
         /// </summary>
-        /// <returns></returns>
-        public async Task GetCurrentNotifyCharacteristic()
+        public void GetCurrentNotifyCharacteristic()
         {
             if (CurrentService == null) return;
             Guid guid = new Guid(Config.NotifyGuid);
-            CurrentService.GetCharacteristicsForUuidAsync(guid).Completed = async (asyncInfo, asyncStatus) =>
+            CurrentService.GetCharacteristicsForUuidAsync(guid).Completed = (asyncInfo, asyncStatus) =>
             {
                 if (asyncStatus == AsyncStatus.Completed)
                 {
@@ -171,11 +167,10 @@ namespace Wit.Bluetooth.WinBlue
                         CurrentNotifyCharacteristic.ProtectionLevel = GattProtectionLevel.Plain;
                         CurrentNotifyCharacteristic.ValueChanged += Characteristic_ValueChanged;
                         EnableNotifications(CurrentNotifyCharacteristic);
-
                     }
                     else
                     {
-                        OnReceive(BluetoothEvent.Connecting, Config.Mac);
+                        OnReceive?.Invoke(BluetoothEvent.Connecting, Config.Mac);
                         Thread.Sleep(10);
                         GetCurrentNotifyCharacteristic();
                     }
@@ -183,46 +178,40 @@ namespace Wit.Bluetooth.WinBlue
             };
         }
 
-
         /// <summary>
         /// 特征值改变事件
         /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="args"></param>
         private void Characteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
             if (!IsConnect) return;
             byte[] data;
             CryptographicBuffer.CopyToByteArray(args.CharacteristicValue, out data);
-            string mac = "";
             if (sender != null)
             {
-                mac = MacUtils.DeviceIdToMac(sender.Service.Device.DeviceId);
-                OnReceive(BluetoothEvent.Data, mac, data);
+                string mac = MacUtils.DeviceIdToMac(sender.Service.Device.DeviceId);
+                OnReceive?.Invoke(BluetoothEvent.Data, mac, data);
             }
         }
 
         /// <summary>
         /// 设置特征对象为接收通知对象
         /// </summary>
-        /// <param name="characteristic"></param>
-        /// <returns></returns>
         public void EnableNotifications(GattCharacteristic characteristic)
         {
-            characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(CHARACTERISTIC_NOTIFICATION_TYPE).Completed = async (asyncInfo, asyncStatus) =>
+            characteristic.WriteClientCharacteristicConfigurationDescriptorAsync(CHARACTERISTIC_NOTIFICATION_TYPE).Completed = (asyncInfo, asyncStatus) =>
             {
                 if (asyncStatus == AsyncStatus.Completed)
                 {
                     GattCommunicationStatus status = asyncInfo.GetResults();
                     if (status == GattCommunicationStatus.Unreachable)
                     {
-                        OnReceive(BluetoothEvent.Connecting, Config.Mac);
+                        OnReceive?.Invoke(BluetoothEvent.Connecting, Config.Mac);
                         if (CurrentNotifyCharacteristic != null)
                         {
                             EnableNotifications(CurrentNotifyCharacteristic);
                         }
                     }
-                    OnReceive(BluetoothEvent.Connecting, Config.Mac);
+                    OnReceive?.Invoke(BluetoothEvent.Connecting, Config.Mac);
                 }
             };
         }
@@ -230,13 +219,13 @@ namespace Wit.Bluetooth.WinBlue
         /// <summary>
         /// 写出数据
         /// </summary>
-        /// <param name="data"></param>
-        /// <returns></returns>
         public void Write(byte[] data)
         {
             if (CurrentWriteCharacteristic != null)
             {
-                CurrentWriteCharacteristic?.WriteValueAsync(CryptographicBuffer.CreateFromByteArray(data), GattWriteOption.WriteWithResponse);
+                _ = CurrentWriteCharacteristic.WriteValueAsync(
+                    CryptographicBuffer.CreateFromByteArray(data),
+                    GattWriteOption.WriteWithResponse);
             }
         }
 
@@ -251,16 +240,10 @@ namespace Wit.Bluetooth.WinBlue
         /// <summary>
         /// 销毁
         /// </summary>
-        public void Dispose() {
-
+        public void Dispose()
+        {
             IsConnect = false;
-            // 放弃写特征值
-            if (CurrentWriteCharacteristic != null)
-            {
-                CurrentWriteCharacteristic = null;
-            }
 
-            // 放弃读特征值
             if (CurrentNotifyCharacteristic != null)
             {
                 CurrentNotifyCharacteristic.ValueChanged -= Characteristic_ValueChanged;
@@ -278,7 +261,8 @@ namespace Wit.Bluetooth.WinBlue
         /// <summary>
         /// 程序关闭时
         /// </summary>
-        ~WinBlueClient() {
+        ~WinBlueClient()
+        {
             Dispose();
         }
     }

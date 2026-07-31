@@ -3,7 +3,7 @@ using System.IO;
 using System.Runtime.Serialization;
 using System.Runtime.Serialization.Json;
 
-namespace Wit.Example_BWT901BLE.DataProcessing.Calibration
+namespace dsat.DataProcessing.Calibration
 {
     [DataContract]
     public class CalibrationConfig
@@ -46,3 +46,4 @@ namespace Wit.Example_BWT901BLE.DataProcessing.Calibration
         }
     }
 }
+

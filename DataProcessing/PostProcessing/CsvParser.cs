@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 
-namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
+namespace dsat.DataProcessing.PostProcessing
 {
     public static class CsvParser
     {
@@ -134,3 +134,4 @@ namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
         }
     }
 }
+

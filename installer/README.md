@@ -1,6 +1,6 @@
 # Installer Packaging
 
-This folder contains the installer packaging pipeline for `Wit.Example_BWT901BLE`.
+This folder contains the installer packaging pipeline for `dsat`.
 
 ## What it does
 

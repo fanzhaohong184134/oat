@@ -43,7 +43,7 @@ function Resolve-ISCC {
 }
 
 $repoRoot = Split-Path -Parent $PSScriptRoot
-$sln = Join-Path $repoRoot "Wit.Example_BWT901BLE.sln"
+$sln = Join-Path $repoRoot "dsat.sln"
 $mainOut = Join-Path $repoRoot "bin\$Configuration"
 $stageRoot = Join-Path $repoRoot "installer\_staging"
 $stageApp = Join-Path $stageRoot "app"
@@ -132,6 +132,23 @@ foreach ($rel in $legacyDirs) {
 $cameraCapturesPath = Join-Path $stageApp "camera_captures"
 if (Test-Path $cameraCapturesPath) {
     Get-ChildItem -Path $cameraCapturesPath -Recurse -File | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+
+# Remove legacy app binary names after product rename to dsat.
+$legacyFiles = @(
+    "Wit.Example_BWT901BLE.exe",
+    "Wit.Example_BWT901BLE.exe.config"
+)
+foreach ($name in $legacyFiles) {
+    $legacyFile = Join-Path $stageApp $name
+    if (Test-Path $legacyFile) {
+        Remove-Item $legacyFile -Force -ErrorAction SilentlyContinue
+    }
+}
+
+$legacyResource = Join-Path $stageApp "zh-CN\Wit.Example_BWT901BLE.resources.dll"
+if (Test-Path $legacyResource) {
+    Remove-Item $legacyResource -Force -ErrorAction SilentlyContinue
 }
 
 # Remove files that should not go to installer payload.

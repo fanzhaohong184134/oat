@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Text;
-using Wit.Example_BWT901BLE.DataProcessing.Calibration;
+using dsat.DataProcessing.Calibration;
 
-namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
+namespace dsat.DataProcessing.PostProcessing
 {
     public class ProcessingReport
     {
@@ -153,3 +153,4 @@ namespace Wit.Example_BWT901BLE.DataProcessing.PostProcessing
         }
     }
 }
+

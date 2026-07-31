@@ -6,7 +6,7 @@
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{A1B2C3D4-1111-2222-3333-444455556666}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>Wit.Example_BWT901BLE.CameraCalibrationApp</RootNamespace>
+    <RootNamespace>dsat.CameraCalibrationApp</RootNamespace>
     <AssemblyName>CameraCalibration</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <LangVersion>8.0</LangVersion>
@@ -47,3 +47,4 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
+

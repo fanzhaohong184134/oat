@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace Wit.Example_BWT901BLE.Sampling
+namespace dsat.Sampling
 {
     /// <summary>
     /// 采样日志管理器

@@ -1,10 +1,10 @@
-; Inno Setup script for Wit.Example_BWT901BLE
+; Inno Setup script for dsat
 ; Build with: ISCC.exe /DSourceDir="..." /DOutDir="..." installer\Setup.iss
 
-#define AppName "Wit.Example_BWT901BLE"
+#define AppName "dsat"
 #define AppVersion "1.0.0"
 #define AppPublisher "Wit"
-#define AppExeName "Wit.Example_BWT901BLE.exe"
+#define AppExeName "dsat.exe"
 
 #ifndef SourceDir
   #error SourceDir is not defined. Pass /DSourceDir="absolute staging path"

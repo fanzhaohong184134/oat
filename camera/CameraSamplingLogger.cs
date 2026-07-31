@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace Wit.Example_BWT901BLE.Camera
+namespace dsat.Camera
 {
     /// <summary>
     /// 相机采样日志管理器
@@ -151,3 +151,4 @@ namespace Wit.Example_BWT901BLE.Camera
         }
     }
 }
+

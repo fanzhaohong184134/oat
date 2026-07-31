@@ -1,6 +1,6 @@
 using System;
 
-namespace Wit.Example_BWT901BLE.Camera
+namespace dsat.Camera
 {
     /// <summary>
     /// 相机拍照日志记录
@@ -88,3 +88,4 @@ namespace Wit.Example_BWT901BLE.Camera
         }
     }
 }
+

@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Text;
 
-namespace Wit.Example_BWT901BLE.CalibrationPanels
+namespace dsat.CalibrationPanels
 {
     public class CalibrationPathService
     {
@@ -104,3 +104,4 @@ namespace Wit.Example_BWT901BLE.CalibrationPanels
         }
     }
 }
+

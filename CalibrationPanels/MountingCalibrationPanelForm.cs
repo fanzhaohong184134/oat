@@ -3,9 +3,9 @@ using System.Globalization;
 using System.IO;
 using System.Drawing;
 using System.Windows.Forms;
-using Wit.Example_BWT901BLE.DataProcessing.Calibration;
+using dsat.DataProcessing.Calibration;
 
-namespace Wit.Example_BWT901BLE.CalibrationPanels
+namespace dsat.CalibrationPanels
 {
     public class MountingCalibrationPanelForm : CalibrationPanelBaseForm
     {
@@ -165,3 +165,4 @@ namespace Wit.Example_BWT901BLE.CalibrationPanels
         }
     }
 }
+

@@ -2,7 +2,7 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 
-namespace Wit.Example_BWT901BLE.Camera
+namespace dsat.Camera
 {
     /// <summary>
     /// 浮动窗口 - 显示相机实时预览画面
@@ -37,6 +37,17 @@ namespace Wit.Example_BWT901BLE.Camera
                 SizeMode = PictureBoxSizeMode.Zoom,
                 BackColor = Color.FromArgb(30, 30, 30),
                 BorderStyle = BorderStyle.None
+            };
+
+            _statusLabel = new Label
+            {
+                Dock = DockStyle.Bottom,
+                Height = 24,
+                Text = "等待预览帧...",
+                ForeColor = Color.WhiteSmoke,
+                BackColor = Color.FromArgb(45, 45, 45),
+                TextAlign = ContentAlignment.MiddleLeft,
+                Padding = new Padding(8, 0, 8, 0)
             };
 
             this.Controls.Add(_pictureBox);
@@ -81,6 +92,19 @@ namespace Wit.Example_BWT901BLE.Camera
         /// </summary>
         public void UpdateStatus(string status)
         {
+            if (this.IsDisposed || _statusLabel == null) return;
+
+            if (this.InvokeRequired)
+            {
+                try
+                {
+                    this.BeginInvoke(new Action(() => UpdateStatus(status)));
+                }
+                catch { }
+                return;
+            }
+
+            _statusLabel.Text = string.IsNullOrWhiteSpace(status) ? "预览中" : status;
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
@@ -108,3 +132,4 @@ namespace Wit.Example_BWT901BLE.Camera
         }
     }
 }
+

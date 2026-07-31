@@ -90,7 +90,7 @@ namespace Wit.Bluetooth.WinBlue
         /// <param name="args"></param>
         private void DeviceWatcher_Received(BluetoothLEAdvertisementWatcher sender, BluetoothLEAdvertisementReceivedEventArgs args)
         {
-            BluetoothLEDevice.FromBluetoothAddressAsync(args.BluetoothAddress).Completed = async (asyncInfo, asyncStatus) =>
+            BluetoothLEDevice.FromBluetoothAddressAsync(args.BluetoothAddress).Completed = (asyncInfo, asyncStatus) =>
             {
                 if (asyncStatus == AsyncStatus.Completed)
                 {

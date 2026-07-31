@@ -1,8 +1,8 @@
 using System;
 using System.IO;
-using Wit.Example_BWT901BLE.DataProcessing.Calibration;
+using dsat.DataProcessing.Calibration;
 
-namespace Wit.Example_BWT901BLE.InstrumentCalibrationApp
+namespace dsat.InstrumentCalibrationApp
 {
     class Program
     {
@@ -276,3 +276,4 @@ namespace Wit.Example_BWT901BLE.InstrumentCalibrationApp
         }
     }
 }
+

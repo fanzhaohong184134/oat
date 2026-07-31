@@ -124,7 +124,6 @@ namespace Wit.SDK.Modular.Sensor.Modular.Connector.Role
             if (ConnectStatus != ConnectStatus.Opened)
             {
                 throw new Exception("发送失败，未打开连接");
-                return;
             }
 
             if (TcpClient != null && TcpClient.Connected)
