@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
 
@@ -36,6 +37,8 @@ namespace Wit.Example_BWT901BLE.Camera
         private FileSystemWatcher _fileWatcher;
         private readonly HashSet<string> _processedFiles = new HashSet<string>();
         private readonly object _processedFilesLock = new object();
+        private StreamWriter _textLogWriter;
+        private readonly object _textLogLock = new object();
 
         // 预览相关成员
         private Process _previewProcess;
@@ -77,6 +80,8 @@ namespace Wit.Example_BWT901BLE.Camera
         {
             get { return _csvLogger != null ? _csvLogger.CurrentLogPath : null; }
         }
+
+        public string TextLogPath { get; private set; }
 
         public CameraManager()
         {
@@ -206,8 +211,10 @@ namespace Wit.Example_BWT901BLE.Camera
             _captureStartTime = DateTime.Now;
             lock (_processedFilesLock) { _processedFiles.Clear(); }
 
+            StartTextLog();
+
             // 启动CSV日志
-            string logDir = Path.Combine(_saveDirectory, "logs");
+            string logDir = Path.Combine(_saveDirectory, "record");
             _csvLogger = new CameraSamplingLogger();
             _csvLogger.StartRecording(logDir, _cameraIp);
 
@@ -243,6 +250,7 @@ namespace Wit.Example_BWT901BLE.Camera
                 _captureProcess.EnableRaisingEvents = true;
                 _captureProcess.Exited += CaptureProcess_Exited;
 
+                WriteTextLog(string.Format("启动拍照: IP={0}, 间隔={1}s, 前缀={2}", _cameraIp, _interval, _baseFileName));
                 OnStatusChanged?.Invoke(string.Format("开始拍照: IP={0}, 间隔={1}s, 前缀={2}",
                     _cameraIp, _interval, _baseFileName));
             }
@@ -250,6 +258,8 @@ namespace Wit.Example_BWT901BLE.Camera
             {
                 _isCapturing = false;
                 StopFileWatcher();
+                WriteTextLog("启动拍照失败: " + ex.Message);
+                StopTextLog();
                 OnStatusChanged?.Invoke("启动拍照失败: " + ex.Message);
             }
         }
@@ -287,6 +297,9 @@ namespace Wit.Example_BWT901BLE.Camera
                 csvPath = _csvLogger.StopRecording();
             }
 
+            WriteTextLog(string.Format("拍照停止，共拍摄 {0} 张。CSV: {1}", _captureCount, csvPath ?? "无"));
+            StopTextLog();
+
             OnStatusChanged?.Invoke(string.Format("拍照停止，共拍摄 {0} 张。日志: {1}",
                 _captureCount, csvPath ?? "无"));
         }
@@ -300,6 +313,7 @@ namespace Wit.Example_BWT901BLE.Camera
                 return;
 
             string line = e.Data;
+            WriteTextLog("STDOUT: " + line);
 
             // 匹配: [1] Saved: photo_1234567890.jpeg (52480 bytes)
             Match m = Regex.Match(line, @"\[(\d+)\] Saved: (\S+) \((\d+) bytes\)");
@@ -386,6 +400,7 @@ namespace Wit.Example_BWT901BLE.Camera
         {
             if (!string.IsNullOrEmpty(e.Data))
             {
+                WriteTextLog("STDERR: " + e.Data);
                 OnStatusChanged?.Invoke("STDERR: " + e.Data);
             }
         }
@@ -395,6 +410,7 @@ namespace Wit.Example_BWT901BLE.Camera
             if (_isCapturing && !_stopRequested)
             {
                 _isCapturing = false;
+                WriteTextLog("拍照进程意外退出");
                 OnStatusChanged?.Invoke("拍照进程意外退出");
 
                 string csvPath = null;
@@ -402,6 +418,62 @@ namespace Wit.Example_BWT901BLE.Camera
                 {
                     csvPath = _csvLogger.StopRecording();
                 }
+
+                StopTextLog();
+            }
+        }
+
+        private void StartTextLog()
+        {
+            try
+            {
+                string textLogDir = Path.Combine(_saveDirectory, "log");
+                if (!Directory.Exists(textLogDir))
+                    Directory.CreateDirectory(textLogDir);
+
+                string fileName = "Camera_TextLog_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt";
+                TextLogPath = Path.Combine(textLogDir, fileName);
+
+                lock (_textLogLock)
+                {
+                    _textLogWriter = new StreamWriter(TextLogPath, false, Encoding.UTF8);
+                    _textLogWriter.AutoFlush = true;
+                    _textLogWriter.WriteLine("# Camera Capture Text Log");
+                    _textLogWriter.WriteLine("# Start: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                    _textLogWriter.WriteLine("# Camera: " + _cameraIp);
+                    _textLogWriter.WriteLine("# ============================================");
+                }
+            }
+            catch
+            {
+                TextLogPath = null;
+            }
+        }
+
+        private void WriteTextLog(string message)
+        {
+            lock (_textLogLock)
+            {
+                if (_textLogWriter == null)
+                    return;
+
+                _textLogWriter.WriteLine("[" + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff") + "] " + message);
+            }
+        }
+
+        private void StopTextLog()
+        {
+            lock (_textLogLock)
+            {
+                if (_textLogWriter == null)
+                    return;
+
+                _textLogWriter.WriteLine("# ============================================");
+                _textLogWriter.WriteLine("# End: " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff"));
+                _textLogWriter.Flush();
+                _textLogWriter.Close();
+                _textLogWriter.Dispose();
+                _textLogWriter = null;
             }
         }
 

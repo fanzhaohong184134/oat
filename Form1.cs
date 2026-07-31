@@ -845,7 +845,7 @@ namespace Wit.Example_BWT901BLE
                 try
                 {
                     _samplingLogger = new SamplingLogger();
-                    string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+                    string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "IMU_sample", "record");
 
                     string deviceInfo = "BWT901BLE";
                     if (FoundDeviceDict.Count > 0)
@@ -1251,7 +1251,7 @@ namespace Wit.Example_BWT901BLE
             }
         }
 
-        // ── 仪器标定（航向偏差） ──
+        // ── 航向标定（可选） ──
         private void instrumentCalibButton_Click(object sender, EventArgs e)
         {
             string exePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "InstrumentCalibration.exe");
@@ -1261,7 +1261,7 @@ namespace Wit.Example_BWT901BLE
             }
             else
             {
-                MessageBox.Show("未找到 InstrumentCalibration.exe，请先编译仪器标定项目。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("未找到 InstrumentCalibration.exe，请先编译航向标定项目。", "提示", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
 
@@ -1272,7 +1272,7 @@ namespace Wit.Example_BWT901BLE
             {
                 dlg.Title = "选择IMU采样CSV文件";
                 dlg.Filter = "CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
-                dlg.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "logs");
+                dlg.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "IMU_sample", "record");
                 if (dlg.ShowDialog() == DialogResult.OK)
                     imuCsvTextBox.Text = dlg.FileName;
             }
@@ -1285,7 +1285,7 @@ namespace Wit.Example_BWT901BLE
             {
                 dlg.Title = "选择相机采样CSV文件";
                 dlg.Filter = "CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
-                dlg.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "camera_captures", "logs");
+                dlg.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "camera_captures", "record");
                 if (dlg.ShowDialog() == DialogResult.OK)
                     cameraCsvTextBox.Text = dlg.FileName;
             }
@@ -1392,7 +1392,12 @@ namespace Wit.Example_BWT901BLE
                 string reportPath = Path.Combine(reportDir, "correction_report_" + DateTime.Now.ToString("yyyyMMdd_HHmmss") + ".txt");
                 report.SaveToFile(reportPath);
 
-                MessageBox.Show(report.ToSummary() + "\n\n报告已保存至:\n" + reportPath, "处理完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                bool magneticOnlyMode = Math.Abs(config.PsiOffset) < 1e-6;
+                string magneticOnlyTip = magneticOnlyMode
+                    ? "\n\n提示: 当前未使用现场航向校核(ψ_offset≈0)，按磁场定位解算，精度可能受损。"
+                    : string.Empty;
+
+                MessageBox.Show(report.ToSummary() + magneticOnlyTip + "\n\n报告已保存至:\n" + reportPath, "处理完成", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
             catch (Exception ex)
             {
