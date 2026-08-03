@@ -109,6 +109,7 @@ namespace dsat
         /// 相机管理器
         /// </summary>
         private CameraManager _cameraManager;
+        private CalibrationPathService _calibrationPathService;
 
         /// <summary>
         /// 浮动预览窗口
@@ -182,12 +183,12 @@ namespace dsat
             ApplySurveyingTheme();
 
             // 初始化 device_info 目录与默认设备编号
-            var pathService = new CalibrationPathService(AppDomain.CurrentDomain.BaseDirectory);
-            string deviceId = pathService.EnsureAndPersistDeviceId(pathService.GetDefaultDeviceId());
+            _calibrationPathService = new CalibrationPathService(AppDomain.CurrentDomain.BaseDirectory);
+            string deviceId = _calibrationPathService.EnsureAndPersistDeviceId(_calibrationPathService.GetDefaultDeviceId());
             string inputDir, outputDir;
-            pathService.EnsureCalibrationDirs(deviceId, "camera_calibration", out inputDir, out outputDir);
-            pathService.EnsureCalibrationDirs(deviceId, "mounting_calibration", out inputDir, out outputDir);
-            pathService.EnsureCalibrationDirs(deviceId, "heading_calibration", out inputDir, out outputDir);
+            _calibrationPathService.EnsureCalibrationDirs(deviceId, "camera_calibration", out inputDir, out outputDir);
+            _calibrationPathService.EnsureCalibrationDirs(deviceId, "mounting_calibration", out inputDir, out outputDir);
+            _calibrationPathService.EnsureCalibrationDirs(deviceId, "heading_calibration", out inputDir, out outputDir);
 
             // 初始化相机管理器
             _cameraManager = new CameraManager();
@@ -2343,7 +2344,7 @@ namespace dsat
             }
 
             // 加载或创建默认校准配置
-            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "calibration_config.json");
+            string configPath = (_calibrationPathService ?? new CalibrationPathService(AppDomain.CurrentDomain.BaseDirectory)).ConfigPath;
             CalibrationConfig config;
             if (File.Exists(configPath))
             {

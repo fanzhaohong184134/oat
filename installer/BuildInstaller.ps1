@@ -134,6 +134,18 @@ if (Test-Path $cameraCapturesPath) {
     Get-ChildItem -Path $cameraCapturesPath -Recurse -File | Remove-Item -Force -ErrorAction SilentlyContinue
 }
 
+# Remove runtime-generated IMU sample files.
+$imuRecordPath = Join-Path $stageApp "IMU_sample\record"
+if (Test-Path $imuRecordPath) {
+    Get-ChildItem -Path $imuRecordPath -Recurse -File | Remove-Item -Force -ErrorAction SilentlyContinue
+}
+
+# Remove runtime-generated device identity cache.
+$deviceInfoPath = Join-Path $stageApp "device_info"
+if (Test-Path $deviceInfoPath) {
+    Remove-Item $deviceInfoPath -Recurse -Force -ErrorAction SilentlyContinue
+}
+
 # Remove legacy app binary names after product rename to dsat.
 $legacyFiles = @(
     "Wit.Example_BWT901BLE.exe",

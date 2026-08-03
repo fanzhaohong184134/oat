@@ -8,6 +8,7 @@ This folder contains the installer packaging pipeline for `dsat`.
 - Collects the main app + child executables + dependent libraries into a staging folder.
 - Creates an installable EXE using Inno Setup.
 - Installer supports custom install directory selection.
+- Runtime-generated data (for example, `device_info` and sample records) is cleaned from staging before packaging.
 - Installer payload includes runtime folders:
   - `IMU_sample/record`
   - `camera_captures/record`

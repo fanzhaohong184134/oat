@@ -8,16 +8,59 @@ namespace dsat.CalibrationPanels
     public class CalibrationPathService
     {
         private readonly string _baseDirectory;
+        private readonly string _dataDirectory;
 
         public CalibrationPathService(string baseDirectory)
         {
             _baseDirectory = baseDirectory;
+            _dataDirectory = ResolveWritableDataDirectory(baseDirectory);
         }
 
         public string BaseDirectory => _baseDirectory;
-        public string DeviceInfoRoot => Path.Combine(_baseDirectory, "device_info");
+        public string DataDirectory => _dataDirectory;
+        public string DeviceInfoRoot => Path.Combine(_dataDirectory, "device_info");
         public string DeviceIdFilePath => Path.Combine(DeviceInfoRoot, "device_id.txt");
-        public string ConfigPath => Path.Combine(_baseDirectory, "calibration_config.json");
+        public string ConfigPath => Path.Combine(_dataDirectory, "calibration_config.json");
+
+        private static string ResolveWritableDataDirectory(string baseDirectory)
+        {
+            if (CanWriteToDirectory(baseDirectory))
+                return baseDirectory;
+
+            string localAppData = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Wit",
+                "dsat");
+            if (CanWriteToDirectory(localAppData))
+                return localAppData;
+
+            string tempPath = Path.Combine(Path.GetTempPath(), "Wit", "dsat");
+            if (CanWriteToDirectory(tempPath))
+                return tempPath;
+
+            return baseDirectory;
+        }
+
+        private static bool CanWriteToDirectory(string directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+                return false;
+
+            try
+            {
+                Directory.CreateDirectory(directory);
+                string probeFile = Path.Combine(directory, ".write_test_" + Guid.NewGuid().ToString("N") + ".tmp");
+                using (FileStream stream = File.Create(probeFile, 1, FileOptions.DeleteOnClose))
+                {
+                    // FileOptions.DeleteOnClose ensures the probe does not persist.
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
 
         public string EnsureAndPersistDeviceId(string preferredDeviceId)
         {
