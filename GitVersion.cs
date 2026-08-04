@@ -3,6 +3,6 @@ namespace dsat
 {
     static class GitVersion
     {
-        public const string CommitHash = "2d82cad";
+        public const string CommitHash = "cd00c9f";
     }
 }

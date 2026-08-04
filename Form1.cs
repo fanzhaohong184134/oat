@@ -1672,7 +1672,7 @@ namespace dsat
                 try
                 {
                     _samplingLogger = new SamplingLogger();
-                    string logDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "IMU_sample", "record");
+                    string logDir = Path.Combine(GetRuntimeDataRoot(), "IMU_sample", "record");
 
                     string deviceInfo = "BWT901BLE";
                     if (FoundDeviceDict.Count > 0)
@@ -2284,7 +2284,7 @@ namespace dsat
             {
                 dlg.Title = "选择IMU采样CSV文件";
                 dlg.Filter = "CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
-                dlg.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "IMU_sample", "record");
+                dlg.InitialDirectory = Path.Combine(GetRuntimeDataRoot(), "IMU_sample", "record");
                 if (dlg.ShowDialog() == DialogResult.OK)
                     imuCsvTextBox.Text = dlg.FileName;
             }
@@ -2297,7 +2297,7 @@ namespace dsat
             {
                 dlg.Title = "选择相机采样CSV文件";
                 dlg.Filter = "CSV文件 (*.csv)|*.csv|所有文件 (*.*)|*.*";
-                dlg.InitialDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "camera_captures", "record");
+                dlg.InitialDirectory = Path.Combine(GetRuntimeDataRoot(), "camera_captures", "record");
                 if (dlg.ShowDialog() == DialogResult.OK)
                     cameraCsvTextBox.Text = dlg.FileName;
             }
@@ -2329,6 +2329,14 @@ namespace dsat
             angleY = firstDevice.GetDeviceData(WitSensorKey.AngleY) ?? 0;
             angleZ = firstDevice.GetDeviceData(WitSensorKey.AngleZ) ?? 0;
             return true;
+        }
+
+        private string GetRuntimeDataRoot()
+        {
+            if (_calibrationPathService != null)
+                return _calibrationPathService.DataDirectory;
+
+            return new CalibrationPathService(AppDomain.CurrentDomain.BaseDirectory).DataDirectory;
         }
 
         // ── 开始数据处理 ──

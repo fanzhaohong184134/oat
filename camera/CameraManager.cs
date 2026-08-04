@@ -71,7 +71,7 @@ namespace dsat.Camera
         public string SaveDirectory
         {
             get => _saveDirectory;
-            set => _saveDirectory = value;
+            set => _saveDirectory = string.IsNullOrWhiteSpace(value) ? GetDefaultCameraSaveDirectory() : value;
         }
 
         public string CsvLogPath
@@ -83,7 +83,71 @@ namespace dsat.Camera
 
         public CameraManager()
         {
-            _saveDirectory = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "camera_captures");
+            _saveDirectory = GetDefaultCameraSaveDirectory();
+        }
+
+        private static string GetDefaultRuntimeRootDirectory()
+        {
+            string baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
+            if (CanWriteToDirectory(baseDirectory))
+                return baseDirectory;
+
+            string localAppData = Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                "Wit",
+                "dsat");
+            if (CanWriteToDirectory(localAppData))
+                return localAppData;
+
+            string tempRoot = Path.Combine(Path.GetTempPath(), "Wit", "dsat");
+            if (CanWriteToDirectory(tempRoot))
+                return tempRoot;
+
+            return baseDirectory;
+        }
+
+        private static string GetDefaultCameraSaveDirectory()
+        {
+            return Path.Combine(GetDefaultRuntimeRootDirectory(), "camera_captures");
+        }
+
+        private static bool CanWriteToDirectory(string directory)
+        {
+            if (string.IsNullOrWhiteSpace(directory))
+                return false;
+
+            try
+            {
+                Directory.CreateDirectory(directory);
+                string probe = Path.Combine(directory, ".write_test_" + Guid.NewGuid().ToString("N") + ".tmp");
+                using (FileStream stream = File.Create(probe, 1, FileOptions.DeleteOnClose))
+                {
+                    // Probe file is deleted automatically on close.
+                }
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private bool EnsureWritableSaveDirectory()
+        {
+            string current = _saveDirectory;
+            if (CanWriteToDirectory(current))
+                return true;
+
+            string fallback = GetDefaultCameraSaveDirectory();
+            if (string.Equals(current, fallback, StringComparison.OrdinalIgnoreCase))
+                return false;
+
+            if (!CanWriteToDirectory(fallback))
+                return false;
+
+            _saveDirectory = fallback;
+            OnStatusChanged?.Invoke("保存目录不可写，已自动切换到: " + _saveDirectory);
+            return true;
         }
 
         /// <summary>
@@ -120,8 +184,11 @@ namespace dsat.Camera
                     return false;
                 }
 
-                if (!Directory.Exists(_saveDirectory))
-                    Directory.CreateDirectory(_saveDirectory);
+                if (!EnsureWritableSaveDirectory())
+                {
+                    OnStatusChanged?.Invoke("保存目录不可写: " + _saveDirectory);
+                    return false;
+                }
 
                 OnStatusChanged?.Invoke("正在连接相机 " + _cameraIp + "...");
 
@@ -200,8 +267,11 @@ namespace dsat.Camera
                 return;
             }
 
-            if (!Directory.Exists(_saveDirectory))
-                Directory.CreateDirectory(_saveDirectory);
+            if (!EnsureWritableSaveDirectory())
+            {
+                OnStatusChanged?.Invoke("保存目录不可写: " + _saveDirectory);
+                return;
+            }
 
             _stopRequested = false;
             _isCapturing = true;
@@ -650,7 +720,7 @@ namespace dsat.Camera
                 return;
             }
 
-            _previewOutputDir = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "preview_stream");
+            _previewOutputDir = Path.Combine(GetDefaultRuntimeRootDirectory(), "preview_stream");
             if (!Directory.Exists(_previewOutputDir))
                 Directory.CreateDirectory(_previewOutputDir);
 
