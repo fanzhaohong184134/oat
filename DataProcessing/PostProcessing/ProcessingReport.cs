@@ -39,8 +39,11 @@ namespace dsat.DataProcessing.PostProcessing
             {
                 double dE, dN;
                 OffsetCalculator.Calculate(frame, config, out dE, out dN);
-                rawE.Add(dE);
-                rawN.Add(dN);
+                if (IsFinite(dE) && IsFinite(dN))
+                {
+                    rawE.Add(dE);
+                    rawN.Add(dN);
+                }
             }
 
             var maskE = MadOutlierMask(rawE);
@@ -166,6 +169,11 @@ namespace dsat.DataProcessing.PostProcessing
                 sum += d * d;
             }
             return Math.Sqrt(sum / values.Count);
+        }
+
+        private static bool IsFinite(double value)
+        {
+            return !double.IsNaN(value) && !double.IsInfinity(value);
         }
     }
 }
