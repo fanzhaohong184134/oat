@@ -326,6 +326,7 @@ namespace dsat.Camera
             {
                 _isCapturing = false;
                 StopFileWatcher();
+                StopProcess(ref _captureProcess);
                 WriteTextLog("启动拍照失败: " + ex.Message);
                 StopTextLog();
                 OnStatusChanged?.Invoke("启动拍照失败: " + ex.Message);
@@ -337,27 +338,20 @@ namespace dsat.Camera
         /// </summary>
         public void StopCapture()
         {
-            if (!_isCapturing)
+            bool hasCaptureResources = _isCapturing
+                || _captureProcess != null
+                || _fileWatcher != null
+                || (_csvLogger != null && _csvLogger.IsRecording)
+                || _textLogWriter != null;
+
+            if (!hasCaptureResources)
                 return;
 
             _stopRequested = true;
             _isCapturing = false;
 
             StopFileWatcher();
-
-            if (_captureProcess != null)
-            {
-                try
-                {
-                    if (!_captureProcess.HasExited)
-                    {
-                        _captureProcess.Kill();
-                    }
-                    _captureProcess.Dispose();
-                }
-                catch { }
-                _captureProcess = null;
-            }
+            StopProcess(ref _captureProcess);
 
             string csvPath = null;
             if (_csvLogger != null && _csvLogger.IsRecording)
@@ -646,7 +640,29 @@ namespace dsat.Camera
 
         public void Dispose()
         {
+            StopPreview();
             StopCapture();
+        }
+
+        private void StopProcess(ref Process process)
+        {
+            if (process == null)
+                return;
+
+            try
+            {
+                if (!process.HasExited)
+                {
+                    process.Kill();
+                    process.WaitForExit(2000);
+                }
+            }
+            catch { }
+            finally
+            {
+                try { process.Dispose(); } catch { }
+                process = null;
+            }
         }
 
         #region 实时预览功能
@@ -769,7 +785,11 @@ namespace dsat.Camera
         /// </summary>
         public void StopPreview()
         {
-            if (!_isPreviewRunning)
+            bool hasPreviewResources = _isPreviewRunning
+                || _ffmpegProcess != null
+                || _previewProcess != null;
+
+            if (!hasPreviewResources)
                 return;
 
             _isPreviewRunning = false;
@@ -777,34 +797,8 @@ namespace dsat.Camera
             // 停止文件监控
             StopPreviewFileWatcher();
 
-            if (_ffmpegProcess != null)
-            {
-                try
-                {
-                    if (!_ffmpegProcess.HasExited)
-                    {
-                        _ffmpegProcess.Kill();
-                    }
-                    _ffmpegProcess.Dispose();
-                }
-                catch { }
-                _ffmpegProcess = null;
-            }
-
-            // 停止进程
-            if (_previewProcess != null)
-            {
-                try
-                {
-                    if (!_previewProcess.HasExited)
-                    {
-                        _previewProcess.Kill();
-                    }
-                    _previewProcess.Dispose();
-                }
-                catch { }
-                _previewProcess = null;
-            }
+            StopProcess(ref _ffmpegProcess);
+            StopProcess(ref _previewProcess);
 
             OnStatusChanged?.Invoke(string.Format("预览已停止，共 {0} 帧", _previewFrameCount));
         }
@@ -846,6 +840,12 @@ namespace dsat.Camera
                 if (_ffmpegProcess == null)
                 {
                     OnStatusChanged?.Invoke("[预览] FFmpeg 启动失败");
+                    return;
+                }
+
+                if (!_isPreviewRunning)
+                {
+                    StopProcess(ref _ffmpegProcess);
                     return;
                 }
 
