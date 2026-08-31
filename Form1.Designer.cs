@@ -210,6 +210,7 @@ namespace dsat
             // leftPanel (Dock=Fill, 在mainSplitContainer.Panel1内)
             // ================================================================
             this.leftPanel.Controls.Add(this.leftTableLayout);
+            this.leftPanel.AutoScroll = true;
             this.leftPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.leftPanel.Location = new System.Drawing.Point(0, 0);
             this.leftPanel.Name = "leftPanel";

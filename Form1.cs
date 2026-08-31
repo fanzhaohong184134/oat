@@ -156,6 +156,7 @@ namespace dsat
         /// </summary>
         private Dictionary<Control, float> _controlYRatios = new Dictionary<Control, float>();
         private Dictionary<GroupBox, int> _origGroupBoxHeights = new Dictionary<GroupBox, int>();
+        private float _dpiScale = 1f;
 
         /// <summary>
         /// 构造
@@ -179,6 +180,14 @@ namespace dsat
             this.Text = "数字对中调节仪-" + ver;
             versionLabel.Text = string.Empty;
             versionLabel.Visible = false;
+
+            using (Graphics g = CreateGraphics())
+                _dpiScale = g.DpiY / 96f;
+            this.MinimumSize = new Size(Dpi(800), Dpi(680));
+
+            Rectangle workArea = Screen.FromControl(this).WorkingArea;
+            if (Width > workArea.Width * 0.95 || Height > workArea.Height * 0.95)
+                WindowState = FormWindowState.Maximized;
 
             ApplySurveyingTheme();
 
@@ -221,7 +230,7 @@ namespace dsat
             InitializeLeftGroupGridLayouts();
             LoadProcessingUiPreferences();
             ApplyAdaptiveLeftLayout();
-            leftTableLayout.Resize += (s, args) => ApplyAdaptiveLeftLayout();
+            leftPanel.Resize += (s, args) => ApplyAdaptiveLeftLayout();
             InitializeAlertBanners();
             InitializeLogLegends();
 
@@ -353,6 +362,11 @@ namespace dsat
             light.BackColorChanged += StatusLight_BackColorChanged;
         }
 
+        private int Dpi(int designPixels)
+        {
+            return (int)Math.Ceiling(designPixels * _dpiScale);
+        }
+
         private void InitializeLeftGroupGridLayouts()
         {
             if (_leftGroupGridInitialized) return;
@@ -378,14 +392,14 @@ namespace dsat
                 Padding = new Padding(6, 2, 6, 4)
             };
 
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 84F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Dpi(84)));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 80F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Dpi(80)));
 
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 26F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(22)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(26)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(22)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(26)));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             groupBoxConnection.Controls.Add(grid);
@@ -450,8 +464,8 @@ namespace dsat
 
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(32)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(22)));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             groupBoxSampling.Controls.Add(grid);
@@ -489,21 +503,21 @@ namespace dsat
                 Padding = new Padding(6, 2, 6, 4)
             };
 
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 74F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Dpi(74)));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 30F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Dpi(30)));
 
             for (int i = 0; i < 5; i++)
             {
-                grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+                grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(24)));
             }
             // Spacer between capture interval row and save-directory block.
             // Spacer between save directory row and base file name row.
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 6F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 6F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(6)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(24)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(24)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(6)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(24)));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             groupBoxSettings.Controls.Add(grid);
@@ -594,15 +608,15 @@ namespace dsat
                 Padding = new Padding(6, 2, 6, 4)
             };
 
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 64F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Dpi(64)));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100F));
-            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, 30F));
+            grid.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute, Dpi(30)));
 
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 24F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 22F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 32F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(24)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(24)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(22)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(22)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(32)));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             groupBoxDataProcessing.Controls.Add(grid);
@@ -685,9 +699,9 @@ namespace dsat
 
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
-            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, 30F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(30)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(30)));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(30)));
             grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
 
             groupBoxCalibration.Controls.Add(grid);
@@ -783,10 +797,37 @@ namespace dsat
             };
 
             int[] desiredHeights = groups.Select(g => CalculateGroupMinimumHeight(g)).ToArray();
-            // Hard floor per section to keep controls readable while still allowing overall fit.
-            int[] floorHeights = { 94, 78, 154, 88, 186 };
-            int available = Math.Max(0, leftTableLayout.ClientSize.Height);
+            int[] floorHeights = { Dpi(94), Dpi(78), Dpi(154), Dpi(88), Dpi(186) };
+            int available = Math.Max(0, leftPanel.ClientSize.Height);
             if (available <= 0) return;
+
+            int totalFloor = floorHeights.Sum();
+
+            // 最小内容高度超出可用空间时切换到滚动模式
+            if (totalFloor > available)
+            {
+                if (leftTableLayout.Dock != DockStyle.Top)
+                {
+                    leftTableLayout.Dock = DockStyle.Top;
+                    leftTableLayout.AutoSize = true;
+                }
+
+                for (int i = 0; i < groups.Length; i++)
+                {
+                    int h = Math.Max(desiredHeights[i], floorHeights[i]);
+                    groups[i].MinimumSize = new Size(0, h);
+                    leftTableLayout.RowStyles[i].SizeType = SizeType.Absolute;
+                    leftTableLayout.RowStyles[i].Height = h;
+                }
+                return;
+            }
+
+            // 正常模式：填充可用空间
+            if (leftTableLayout.Dock != DockStyle.Fill)
+            {
+                leftTableLayout.Dock = DockStyle.Fill;
+                leftTableLayout.AutoSize = false;
+            }
 
             int[] targetHeights = (int[])desiredHeights.Clone();
             int totalTarget = targetHeights.Sum();
@@ -811,7 +852,6 @@ namespace dsat
             else if (totalTarget < available)
             {
                 int extra = available - totalTarget;
-                // Prioritize operation-critical regions in field use: sampling and especially data processing.
                 double[] weights = { 0.85, 1.15, 1.2, 0.8, 2.5 };
                 double weightSum = weights.Sum();
 
@@ -822,7 +862,6 @@ namespace dsat
                 }
             }
 
-            // Make total height exactly match available to avoid bottom row being overlapped.
             int diff = available - targetHeights.Sum();
             targetHeights[targetHeights.Length - 1] += diff;
             if (targetHeights[targetHeights.Length - 1] < floorHeights[targetHeights.Length - 1])
