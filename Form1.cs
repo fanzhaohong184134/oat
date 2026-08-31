@@ -518,7 +518,7 @@ namespace dsat
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(24)));
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(6)));
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(24)));
-            grid.RowStyles.Add(new RowStyle(SizeType.Percent, 100F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(32)));
 
             groupBoxSettings.Controls.Add(grid);
 
@@ -797,7 +797,7 @@ namespace dsat
             };
 
             int[] desiredHeights = groups.Select(g => CalculateGroupMinimumHeight(g)).ToArray();
-            int[] floorHeights = { Dpi(94), Dpi(78), Dpi(154), Dpi(88), Dpi(186) };
+            int[] floorHeights = { Dpi(94), Dpi(78), Dpi(260), Dpi(122), Dpi(186) };
             int available = Math.Max(0, leftPanel.ClientSize.Height);
             if (available <= 0) return;
 
