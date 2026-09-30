@@ -91,6 +91,11 @@ CalibrationEngine.exe --step 0D --input samples\0D_input.json --output out.json 
 - 点 **追加0B(静止)** 累积 0B 帧；**生成0C/0D** / **生成0B** 产出 `acquired\*.json`；**重置会话** 清空。
 - 数据源同样可选模拟/真实；真实模式每站采当前物理位置。
 
+## 连接自检与真机接线示例
+
+- 「采集编排」分组的 **连接自检** 按钮：逐项检查 内参(config)、旋转台串口、场景采集一帧(相机+PnP+IMU)，输出 ✔/✖ 诊断。模拟模式全通过；真实模式会指出未接入的驱动。
+- [Acquisition/Real/RealWiringSample.cs](CalibrationBench.UI/Acquisition/Real/RealWiringSample.cs)：真机接线**示例模板** `RealWiringSample.BuildOrchestrator(...)`，展示如何用 `DelegatingCameraSource`/`DelegatingImuSource`/`OpenCvCharucoPnpSolver`/`RealSceneCapture`/`RealRotaryStage` 组装采集编排，按 TODO 填 SDK 调用即可。
+
 输入/输出每项字段与存储位置见 [数据字典与接口说明.md](数据字典与接口说明.md)。
 
 方案与台架设计见 [../校准台研制详细方案设计.md](../校准台研制详细方案设计.md)、[../校准方案（靶标板自定位）.md](../校准方案（靶标板自定位）.md)、[../校准台设计指南与步骤.md](../校准台设计指南与步骤.md)。

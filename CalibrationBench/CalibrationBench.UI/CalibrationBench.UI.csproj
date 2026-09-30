@@ -50,6 +50,7 @@
     <Compile Include="Acquisition\Real\HardwareInterfaces.cs" />
     <Compile Include="Acquisition\Real\RealRotaryStage.cs" />
     <Compile Include="Acquisition\Real\RealSceneCapture.cs" />
+    <Compile Include="Acquisition\Real\RealWiringSample.cs" />
     <Compile Include="Acquisition\Real\Skeletons.cs" />
     <Compile Include="Acquisition\Sim\SimulatedBench.cs" />
     <Compile Include="EngineRunner.cs" />

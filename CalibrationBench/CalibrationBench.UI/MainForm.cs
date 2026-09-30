@@ -75,10 +75,13 @@ namespace CalibrationBench.UI
             _dataSource.SelectedIndex = 0;
             var lbPort = new Label { Left = 210, Top = 62, Width = 84, Text = "旋转台串口" };
             _stagePort.Left = 296; _stagePort.Top = 59; _stagePort.Width = 80; _stagePort.Text = "COM3";
-            var atip = new Label { Left = 392, Top = 62, Width = 500, Height = 30,
+            var atip = new Label { Left = 392, Top = 62, Width = 380, Height = 30,
                 Text = "真实模式需实现相机/PnP/IMU 驱动(见 Acquisition/Real)；旋转台为串口可用实现。" };
+            var bSelfTest = new Button { Text = "连接自检", Left = 782, Top = 58, Width = 110, Height = 26 };
+            bSelfTest.Click += (s, e) => RunSelfTest();
             acq.Controls.Add(lbSrc); acq.Controls.Add(_dataSource);
             acq.Controls.Add(lbPort); acq.Controls.Add(_stagePort); acq.Controls.Add(atip);
+            acq.Controls.Add(bSelfTest);
             Controls.Add(acq);
 
             var man = new GroupBox { Text = "手动挪位采样(无旋转台：人工转/挪到各位置逐站触发)", Left = 12, Top = y + 216, Width = 900, Height = 92 };
@@ -294,6 +297,42 @@ namespace CalibrationBench.UI
         private void ManualReset()
         {
             _manual = null; SetStatus("手动会话已重置", Color.DimGray); Log("手动采样会话已重置。", Color.DimGray);
+        }
+
+        // ---- 连接自检 ----
+        private void RunSelfTest()
+        {
+            Log("▶ 连接自检 ...", Color.Black);
+            bool real = _dataSource.SelectedIndex == 1;
+
+            // 1) 内参
+            var k = Acquisition.ConfigLoader.LoadIntrinsics(_configPath.Text);
+            if (k != null) Log(string.Format("✔ 内参已加载 (fx={0:F1}, cx={1:F1})", k.Fx, k.Cx), Color.Green);
+            else Log("✖ 未找到内参(calibration_config.json)，请先完成 Step 0A。", Color.DarkOrange);
+
+            // 2) 旋转台
+            if (real)
+            {
+                try
+                {
+                    using (var st = new Acquisition.Real.RealRotaryStage(_stagePort.Text))
+                        Log("✔ 旋转台串口 " + _stagePort.Text + " 打开成功，STAT=" + st.IsSettled(), Color.Green);
+                }
+                catch (Exception ex) { Log("✖ 旋转台 " + _stagePort.Text + "：" + ex.Message, Color.Firebrick); }
+            }
+            else Log("· 数据源=模拟：旋转台/相机/IMU 均为模拟。", Color.DimGray);
+
+            // 3) 场景采集一帧(相机+PnP+IMU)
+            try
+            {
+                var scene = MakeScene(BuildSettings());
+                var f = scene.Capture(0);
+                Log(string.Format("✔ 场景采集一帧成功：offsetPnp=({0:F2},{1:F2})mm, H={2:F1}mm, θ_img={3:F2}°",
+                    f.OffsetPnpE_mm, f.OffsetPnpN_mm, f.H_mm, f.ThetaImgBoardDeg), Color.Green);
+            }
+            catch (Exception ex) { Log("✖ 场景采集：" + ex.Message, Color.Firebrick); }
+
+            Log("自检完成。", Color.Black); Log("", Color.Black);
         }
 
         private void RunAcquireMounting()
