@@ -1,0 +1,13 @@
+# 编译产物
+bin/
+obj/
+
+# 打包产物
+installer/dist/
+installer/*.zip
+installer/Output/
+
+# 运行期生成
+**/device_info/
+*_output.json
+calibration_config.json

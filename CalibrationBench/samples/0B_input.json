@@ -1,0 +1,9 @@
+{
+  "DeviceId": "AT1",
+  "Samples": [
+    { "ImuAngleXDeg": 0.00, "ImuAngleYDeg": 0.00, "PitchCamDeg": 0.021, "RollCamDeg": -0.015 },
+    { "ImuAngleXDeg": 0.01, "ImuAngleYDeg": -0.01, "PitchCamDeg": 0.028, "RollCamDeg": -0.006 },
+    { "ImuAngleXDeg": -0.01, "ImuAngleYDeg": 0.02, "PitchCamDeg": 0.041, "RollCamDeg": -0.028 }
+  ],
+  "ToleranceDeg": 0.05
+}
