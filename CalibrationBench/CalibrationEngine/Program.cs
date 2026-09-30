@@ -1,5 +1,6 @@
 using System;
 using System.IO;
+using System.Text;
 using CalibrationEngine.Models;
 
 namespace CalibrationEngine
@@ -15,6 +16,7 @@ namespace CalibrationEngine
     {
         public static int Main(string[] args)
         {
+            try { Console.OutputEncoding = new UTF8Encoding(false); } catch { /* 重定向环境下忽略 */ }
             try
             {
                 var a = ParseArgs(args);

@@ -1,0 +1,17 @@
+{
+  "DeviceId": "AT1",
+  "Intrinsics": {
+    "Cx": 1224.0,
+    "Cy": 1024.0,
+    "Fx": 2200.0,
+    "Fy": 2200.0,
+    "ImageHeight": 2048,
+    "ImageWidth": 2448,
+    "K1": -0.12,
+    "K2": 0.03,
+    "P1": 0.0,
+    "P2": 0.0
+  },
+  "ReprojRms": 0.32,
+  "RmsLimitPx": 0.5
+}
