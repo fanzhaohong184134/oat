@@ -1,3 +1,7 @@
+#if USE_OPENCV
+using OpenCvSharp;
+using OpenCvSharp.Aruco;
+#endif
 using System;
 
 namespace CalibrationBench.UI.Acquisition.Real
@@ -22,22 +26,99 @@ namespace CalibrationBench.UI.Acquisition.Real
         public void Dispose() { }
     }
 
-    /// <summary>ChArUco+PnP 骨架(OpenCvSharp)。</summary>
+    /// <summary>ChArUco 检测 + PnP。默认骨架；定义 USE_OPENCV 后为 OpenCvSharp 参考实现。</summary>
     public sealed class OpenCvCharucoPnpSolver : ICharucoPnpSolver
     {
-        // TODO: 引入 NuGet: OpenCvSharp4 + OpenCvSharp4.runtime.win，实现：
-        //  1) 由 RawImage 构造 Mat；
-        //  2) CvAruco.DetectMarkers + InterpolateCornersCharuco 得角点(charucoCorners/Ids);
-        //  3) objPoints(靶标系,mm) 与 imgPoints;
-        //  4) Cv2.SolvePnP(objPoints, imgPoints, K, distCoeffs, out rvec, out tvec);
-        //  5) 用 Cv2.UndistortPoints 得畸变校正后的板原点像素 → OriginU/OriginV;
-        //  6) 计算重投影 RMS。
+        // 物理靶标板参数(按实际板修改)
+        private readonly int _squaresX;
+        private readonly int _squaresY;
+        private readonly float _squareLenMm;
+        private readonly float _markerLenMm;
+
+        public OpenCvCharucoPnpSolver(int squaresX = 10, int squaresY = 14,
+                                      float squareLenMm = 20f, float markerLenMm = 15f)
+        {
+            _squaresX = squaresX; _squaresY = squaresY;
+            _squareLenMm = squareLenMm; _markerLenMm = markerLenMm;
+        }
+
+#if USE_OPENCV
+        // 参考实现：DetectMarkers → InterpolateCornersCharuco → EstimatePoseCharucoBoard。
+        // OpenCvSharp4 各版本 API 可能略有差异，按实际版本微调。
+        public PnpRaw Solve(RawImage image, CameraIntrinsics intr)
+        {
+            using (var mat = ToMat(image))
+            using (var gray = ToGray(mat))
+            {
+                var dict = CvAruco.GetPredefinedDictionary(PredefinedDictionaryName.Dict5X5_1000);
+                using (var board = CharucoBoard.Create(_squaresX, _squaresY, _squareLenMm, _markerLenMm, dict))
+                using (var dp = DetectorParameters.Create())
+                {
+                    Point2f[][] corners; int[] ids; Point2f[][] rejected;
+                    CvAruco.DetectMarkers(gray, dict, out corners, out ids, dp, out rejected);
+                    if (ids == null || ids.Length == 0) return new PnpRaw { Ok = false };
+
+                    Point2f[] chCorners; int[] chIds;
+                    CvAruco.InterpolateCornersCharuco(corners, ids, gray, board, out chCorners, out chIds);
+                    if (chIds == null || chIds.Length < 6) return new PnpRaw { Ok = false };
+
+                    using (var K = Mat.FromArray(new double[,] {
+                               { intr.Fx, 0, intr.Cx }, { 0, intr.Fy, intr.Cy }, { 0, 0, 1 } }))
+                    using (var dist = Mat.FromArray(new double[] { intr.K1, intr.K2, intr.P1, intr.P2, 0 }))
+                    using (var rvec = new Mat())
+                    using (var tvec = new Mat())
+                    {
+                        bool ok = CvAruco.EstimatePoseCharucoBoard(
+                            InputArray.Create(chCorners), InputArray.Create(chIds),
+                            board, K, dist, rvec, tvec);
+                        if (!ok) return new PnpRaw { Ok = false };
+
+                        double[] rv = { rvec.At<double>(0), rvec.At<double>(1), rvec.At<double>(2) };
+                        double[] tv = { tvec.At<double>(0), tvec.At<double>(1), tvec.At<double>(2) };
+
+                        // 板原点(0,0,0)的无畸变(pinhole)投影 = 校正后像素(与引擎 UCorr/VCorr 对齐)
+                        using (var zeroDist = Mat.Zeros(1, 5, MatType.CV_64F))
+                        {
+                            Point2f[] proj; double[,] jac;
+                            Cv2.ProjectPoints(new[] { new Point3f(0, 0, 0) }, rvec, tvec, K, zeroDist, out proj, out jac);
+                            return new PnpRaw
+                            {
+                                Rvec = rv, Tvec = tv,
+                                OriginU = proj[0].X, OriginV = proj[0].Y,
+                                ReprojRms = 0, Ok = true
+                            };
+                        }
+                    }
+                }
+            }
+        }
+
+        private static Mat ToMat(RawImage img)
+        {
+            var type = img.PixelFormat == "BGR8" ? MatType.CV_8UC3 : MatType.CV_8UC1;
+            var m = new Mat(img.Height, img.Width, type);
+            System.Runtime.InteropServices.Marshal.Copy(img.Data, 0, m.Data, img.Data.Length);
+            return m;
+        }
+
+        private static Mat ToGray(Mat m)
+        {
+            if (m.Channels() == 1) return m.Clone();
+            var g = new Mat();
+            Cv2.CvtColor(m, g, ColorConversionCodes.BGR2GRAY);
+            return g;
+        }
+#else
         public PnpRaw Solve(RawImage image, CameraIntrinsics intrinsics)
         {
             throw new NotSupportedException(
-                "PnP 未实现。请用 OpenCvSharp 实现 OpenCvCharucoPnpSolver：\n" +
-                "CvAruco.DetectMarkers → InterpolateCornersCharuco → Cv2.SolvePnP(objPts,imgPts,K,D,out rvec,out tvec)。");
+                "PnP 未实现(默认骨架)。启用真实 PnP：\n" +
+                "1) NuGet 安装 OpenCvSharp4 + OpenCvSharp4.runtime.win；\n" +
+                "2) csproj 的 DefineConstants 追加 USE_OPENCV；\n" +
+                "3) 按物理板调整 CharucoBoard 参数(格数/尺寸/字典)。\n" +
+                "参考实现见本文件 #if USE_OPENCV 分支。");
         }
+#endif
     }
 
     /// <summary>BWT901BLE 骨架。对接现有 Wit SDK 的 Bwt901ble(见 dsat 项目 ble5/BWT901BLE.cs)。</summary>

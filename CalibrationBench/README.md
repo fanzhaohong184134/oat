@@ -63,9 +63,20 @@ CalibrationEngine.exe --step 0D --input samples\0D_input.json --output out.json 
 - **真实**：使用 `Acquisition/Real` 下的驱动：
   - `RealRotaryStage`（`System.IO.Ports` 串口，**可用实现**；协议 `MOVE/LOCK/STAT?`，按转台改命令帧即可）
   - `RealSceneCapture`（**完整实现** PnP 位姿→offset/H/姿态/方位 换算，含 Rodrigues）
-  - 三个 IO **骨架**待接入：`IndustrialCameraSource`（相机 SDK）、`OpenCvCharucoPnpSolver`（OpenCvSharp `CvAruco`+`SolvePnP`）、`Bwt901ImuSource`（对接 `Bwt901ble`）。未实现时会抛出带对接指引的异常。
+  - 三个 IO 驱动：`IndustrialCameraSource`（相机 SDK，骨架）、`Bwt901ImuSource`（对接 `Bwt901ble`，骨架）、`OpenCvCharucoPnpSolver`（**含 OpenCvSharp 参考实现**，见下）。
+  - 真实模式内参**自动从 `calibration_config.json` 读取**（`ConfigLoader`），未找到时用占位内参并提示先做 0A。
 
-接入真实硬件只需实现这三个骨架类的方法体，采集编排/引擎/界面/契约均无需改动。
+### 启用 OpenCvSharp 真实 PnP
+
+`OpenCvCharucoPnpSolver` 默认走骨架（零依赖、可离线编译）；启用真实 PnP：
+
+1. NuGet 安装 `OpenCvSharp4` + `OpenCvSharp4.runtime.win`；
+2. 在 `CalibrationBench.UI.csproj` 的 `DefineConstants` 追加 `USE_OPENCV`；
+3. 按物理靶标板修改 `OpenCvCharucoPnpSolver` 的 `CharucoBoard` 参数（格数/尺寸/字典）。
+
+参考实现（`#if USE_OPENCV` 分支）：`CvAruco.DetectMarkers → InterpolateCornersCharuco → EstimatePoseCharucoBoard`，并用零畸变 `ProjectPoints` 得校正后板原点像素。
+
+接入真实硬件只需实现相机/IMU 两个骨架类的方法体（PnP 参考实现已给出），采集编排/引擎/界面/契约均无需改动。
 
 输入/输出每项字段与存储位置见 [数据字典与接口说明.md](数据字典与接口说明.md)。
 

@@ -198,13 +198,16 @@ namespace CalibrationBench.UI
         {
             if (_dataSource.SelectedIndex == 1) // 真实驱动
             {
-                Log("数据源=真实：旋转台串口 " + _stagePort.Text + "；相机/PnP/IMU 需已实现 Acquisition/Real 驱动。", Color.DimGray);
+                var k = Acquisition.ConfigLoader.LoadIntrinsics(_configPath.Text);
+                if (k != null) Log(string.Format("数据源=真实：内参取自 config (fx={0:F1}, cx={1:F1})", k.Fx, k.Cx), Color.DimGray);
+                else { k = s.SimIntrinsics(); Log("警告：未从 config 读到内参，暂用占位内参，请先完成 Step 0A。", Color.DarkOrange); }
+                Log("旋转台串口 " + _stagePort.Text + "；相机/PnP/IMU 需已实现 Acquisition/Real 驱动。", Color.DimGray);
                 stage = new Acquisition.Real.RealRotaryStage(_stagePort.Text);
                 scene = new Acquisition.Real.RealSceneCapture(
                     new Acquisition.Real.IndustrialCameraSource(),
                     new Acquisition.Real.OpenCvCharucoPnpSolver(),
                     new Acquisition.Real.Bwt901ImuSource(),
-                    s.SimIntrinsics()); // 真机内参应取自 0A/config
+                    k);
             }
             else // 模拟
             {
