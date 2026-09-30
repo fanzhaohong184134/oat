@@ -78,6 +78,19 @@ CalibrationEngine.exe --step 0D --input samples\0D_input.json --output out.json 
 
 接入真实硬件只需实现相机/IMU 两个骨架类的方法体（PnP 参考实现已给出），采集编排/引擎/界面/契约均无需改动。
 
+### 相机 / IMU 接入的两种方式
+
+- **委托注入（推荐，零耦合）**：用 `DelegatingCameraSource(grab, open)` 与 `DelegatingImuSource(read, open)` 把任意相机/IMU SDK 的读取封成委托传入，UI 无需引用厂商程序集。
+- **Wit SDK 参考实现**：`Bwt901ImuSource` 在定义 `USE_WITSDK` 并引用 Wit SDK 后，用 `Bwt901ble.OnRecord + GetDeviceData(WitSensorKey.*)` 填 `ImuReading`（默认走骨架）。
+
+## 手动挪位采样（无旋转台）
+
+界面「手动挪位采样」分组：人工把设备转/挪到各位置，逐站触发，累积后生成与自动流程相同的输入契约。
+
+- 设「名义方位°」→ 点 **采集本站(0C/0D)**（每站取『每方位帧数』帧，站数+1）；转到下一方位改角度再采，重复 ≥3 站（推荐 8 站）。
+- 点 **追加0B(静止)** 累积 0B 帧；**生成0C/0D** / **生成0B** 产出 `acquired\*.json`；**重置会话** 清空。
+- 数据源同样可选模拟/真实；真实模式每站采当前物理位置。
+
 输入/输出每项字段与存储位置见 [数据字典与接口说明.md](数据字典与接口说明.md)。
 
 方案与台架设计见 [../校准台研制详细方案设计.md](../校准台研制详细方案设计.md)、[../校准方案（靶标板自定位）.md](../校准方案（靶标板自定位）.md)、[../校准台设计指南与步骤.md](../校准台设计指南与步骤.md)。

@@ -20,11 +20,13 @@ namespace CalibrationBench.UI
         private readonly NumericUpDown _settleSec = new NumericUpDown();
         private readonly ComboBox _dataSource = new ComboBox();
         private readonly TextBox _stagePort = new TextBox();
+        private readonly NumericUpDown _manualAz = new NumericUpDown();
+        private Acquisition.ManualAcquisition _manual;
 
         public MainForm()
         {
             Text = "数字对中仪 出厂校准工装 V1.0";
-            Width = 940; Height = 800;
+            Width = 940; Height = 900;
             StartPosition = FormStartPosition.CenterScreen;
             Font = new Font("Microsoft YaHei UI", 9f);
             BuildUi();
@@ -79,11 +81,32 @@ namespace CalibrationBench.UI
             acq.Controls.Add(lbPort); acq.Controls.Add(_stagePort); acq.Controls.Add(atip);
             Controls.Add(acq);
 
-            _status.Left = 12; _status.Top = y + 216; _status.Width = 900; _status.Height = 22;
+            var man = new GroupBox { Text = "手动挪位采样(无旋转台：人工转/挪到各位置逐站触发)", Left = 12, Top = y + 216, Width = 900, Height = 92 };
+            var lbMa = new Label { Left = 16, Top = 28, Width = 64, Text = "名义方位°" };
+            _manualAz.Left = 84; _manualAz.Top = 25; _manualAz.Width = 60; _manualAz.Minimum = 0; _manualAz.Maximum = 360; _manualAz.Value = 0;
+            var bStation = new Button { Text = "采集本站(0C/0D)", Left = 156, Top = 22, Width = 130, Height = 28 };
+            bStation.Click += (s, e) => ManualStation();
+            var bManMount = new Button { Text = "追加0B(静止)", Left = 292, Top = 22, Width = 110, Height = 28 };
+            bManMount.Click += (s, e) => ManualMounting();
+            var bGenCD = new Button { Text = "生成0C/0D", Left = 408, Top = 22, Width = 100, Height = 28 };
+            bGenCD.Click += (s, e) => ManualSaveRotation();
+            var bGenB = new Button { Text = "生成0B", Left = 514, Top = 22, Width = 80, Height = 28 };
+            bGenB.Click += (s, e) => ManualSaveMounting();
+            var bReset = new Button { Text = "重置会话", Left = 600, Top = 22, Width = 90, Height = 28 };
+            bReset.Click += (s, e) => ManualReset();
+            man.Controls.Add(lbMa); man.Controls.Add(_manualAz);
+            man.Controls.Add(bStation); man.Controls.Add(bManMount);
+            man.Controls.Add(bGenCD); man.Controls.Add(bGenB); man.Controls.Add(bReset);
+            var mtip = new Label { Left = 16, Top = 58, Width = 870, Height = 26,
+                Text = "每采一站站数+1(每站取『每方位帧数』帧)；转到下一方位改『名义方位』再采；采够后生成 JSON，用上方步骤按钮执行。" };
+            man.Controls.Add(mtip);
+            Controls.Add(man);
+
+            _status.Left = 12; _status.Top = y + 314; _status.Width = 900; _status.Height = 22;
             _status.Text = "就绪"; _status.ForeColor = Color.DimGray;
             Controls.Add(_status);
 
-            _log.Left = 12; _log.Top = y + 242; _log.Width = 900; _log.Height = 300;
+            _log.Left = 12; _log.Top = y + 340; _log.Width = 900; _log.Height = 250;
             _log.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom;
             _log.ReadOnly = true; _log.BackColor = Color.White; _log.Font = new Font("Consolas", 9f);
             Controls.Add(_log);
@@ -194,26 +217,83 @@ namespace CalibrationBench.UI
             return dir;
         }
 
-        private void MakeBench(Acquisition.AcquisitionSettings s, out Acquisition.IRotaryStage stage, out Acquisition.ISceneCapture scene)
+        private Acquisition.ISceneCapture MakeScene(Acquisition.AcquisitionSettings s)
         {
             if (_dataSource.SelectedIndex == 1) // 真实驱动
             {
                 var k = Acquisition.ConfigLoader.LoadIntrinsics(_configPath.Text);
                 if (k != null) Log(string.Format("数据源=真实：内参取自 config (fx={0:F1}, cx={1:F1})", k.Fx, k.Cx), Color.DimGray);
                 else { k = s.SimIntrinsics(); Log("警告：未从 config 读到内参，暂用占位内参，请先完成 Step 0A。", Color.DarkOrange); }
-                Log("旋转台串口 " + _stagePort.Text + "；相机/PnP/IMU 需已实现 Acquisition/Real 驱动。", Color.DimGray);
-                stage = new Acquisition.Real.RealRotaryStage(_stagePort.Text);
-                scene = new Acquisition.Real.RealSceneCapture(
+                Log("相机/PnP/IMU 需已实现 Acquisition/Real 驱动(或用 Delegating* 注入)。", Color.DimGray);
+                return new Acquisition.Real.RealSceneCapture(
                     new Acquisition.Real.IndustrialCameraSource(),
                     new Acquisition.Real.OpenCvCharucoPnpSolver(),
                     new Acquisition.Real.Bwt901ImuSource(),
                     k);
             }
-            else // 模拟
+            return new Acquisition.SimulatedBench(s);
+        }
+
+        private Acquisition.IRotaryStage MakeStage(Acquisition.AcquisitionSettings s, Acquisition.ISceneCapture scene)
+        {
+            if (_dataSource.SelectedIndex == 1)
             {
-                var b = new Acquisition.SimulatedBench(s);
-                stage = b; scene = b;
+                Log("旋转台串口 " + _stagePort.Text + "(可用实现)。", Color.DimGray);
+                return new Acquisition.Real.RealRotaryStage(_stagePort.Text);
             }
+            return (Acquisition.IRotaryStage)scene; // 模拟台同时实现两接口
+        }
+
+        private void MakeBench(Acquisition.AcquisitionSettings s, out Acquisition.IRotaryStage stage, out Acquisition.ISceneCapture scene)
+        {
+            scene = MakeScene(s);
+            stage = MakeStage(s, scene);
+        }
+
+        // ---- 手动挪位采样 ----
+        private void EnsureManual()
+        {
+            if (_manual == null)
+            {
+                var s = BuildSettings();
+                _manual = new Acquisition.ManualAcquisition(MakeScene(s), s, m => Log(m, Color.Black));
+                Log("▶ 新建手动采样会话。", Color.Black);
+            }
+        }
+
+        private void ManualStation()
+        {
+            try { EnsureManual(); _manual.CaptureStation((double)_manualAz.Value, (int)_framesPerAz.Value); SetStatus("手动站数 " + _manual.StationCount, Color.Green); }
+            catch (Exception ex) { SetStatus("采集异常: " + ex.Message, Color.Firebrick); Log("异常: " + ex.Message, Color.Firebrick); }
+        }
+
+        private void ManualMounting()
+        {
+            try { EnsureManual(); _manual.CaptureMounting((int)_framesPerAz.Value); SetStatus("0B 累计 " + _manual.MountingFrameCount + " 帧", Color.Green); }
+            catch (Exception ex) { SetStatus("采集异常: " + ex.Message, Color.Firebrick); Log("异常: " + ex.Message, Color.Firebrick); }
+        }
+
+        private void ManualSaveRotation()
+        {
+            if (_manual == null || _manual.StationCount == 0) { SetStatus("尚无手动站点", Color.DarkOrange); Log("请先『采集本站(0C/0D)』至少 3 站。", Color.DarkOrange); return; }
+            string p0c, p0d; _manual.SaveRotation(AcqDir(), out p0c, out p0d);
+            SetStatus("已生成 0C/0D(" + _manual.StationCount + " 站)", Color.Green);
+            Log("✔ 0C 输入：" + p0c, Color.Green);
+            Log("✔ 0D 输入：" + p0d, Color.Green);
+            Log("→ 用『Step 0C』『Step 0D』选对应文件执行", Color.Green); Log("", Color.Black);
+        }
+
+        private void ManualSaveMounting()
+        {
+            if (_manual == null || _manual.MountingFrameCount == 0) { SetStatus("尚无 0B 帧", Color.DarkOrange); Log("请先『追加0B(静止)』。", Color.DarkOrange); return; }
+            string p = _manual.SaveMounting(AcqDir());
+            SetStatus("已生成 0B(" + _manual.MountingFrameCount + " 帧)", Color.Green);
+            Log("✔ 0B 输入：" + p + "  → 点『Step 0B』执行", Color.Green); Log("", Color.Black);
+        }
+
+        private void ManualReset()
+        {
+            _manual = null; SetStatus("手动会话已重置", Color.DimGray); Log("手动采样会话已重置。", Color.DimGray);
         }
 
         private void RunAcquireMounting()

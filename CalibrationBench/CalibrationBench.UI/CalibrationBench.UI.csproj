@@ -44,6 +44,9 @@
     <Compile Include="Acquisition\ConfigLoader.cs" />
     <Compile Include="Acquisition\Hal\Hal.cs" />
     <Compile Include="Acquisition\InputContracts.cs" />
+    <Compile Include="Acquisition\JsonUtil.cs" />
+    <Compile Include="Acquisition\ManualAcquisition.cs" />
+    <Compile Include="Acquisition\Real\DelegatingDrivers.cs" />
     <Compile Include="Acquisition\Real\HardwareInterfaces.cs" />
     <Compile Include="Acquisition\Real\RealRotaryStage.cs" />
     <Compile Include="Acquisition\Real\RealSceneCapture.cs" />

@@ -2,6 +2,9 @@
 using OpenCvSharp;
 using OpenCvSharp.Aruco;
 #endif
+#if USE_WITSDK
+using Wit.SDK.Modular.WitSensorApi.Modular.BWT901BLE; // 命名空间按实际 Wit SDK 调整
+#endif
 using System;
 
 namespace CalibrationBench.UI.Acquisition.Real
@@ -122,19 +125,59 @@ namespace CalibrationBench.UI.Acquisition.Real
     }
 
     /// <summary>BWT901BLE 骨架。对接现有 Wit SDK 的 Bwt901ble(见 dsat 项目 ble5/BWT901BLE.cs)。</summary>
+    /// <summary>BWT901BLE。默认骨架；定义 USE_WITSDK 后为 Wit SDK 参考实现。
+    /// 也可直接用 DelegatingImuSource 注入现成读数，无需改本类。</summary>
+#if USE_WITSDK
     public sealed class Bwt901ImuSource : IImuSource
     {
-        // TODO: 复用 Wit SDK：连接 BWT901BLE，订阅 OnRecord，缓存最新一帧；
-        //  ReadLatest() 读 WitSensorKey.AngleX/AngleY/AngleZ/AccX.../AsX... 填 ImuReading。
-        //  为保持工装与 dsat 解耦，建议把 Wit SDK 适配代码单独放一个适配程序集。
+        private readonly Bwt901ble _dev;
+        private volatile ImuReading _latest;
+
+        public Bwt901ImuSource(Bwt901ble device) { _dev = device; }
+
+        public void Open()
+        {
+            _dev.OnRecord += d =>
+            {
+                _latest = new ImuReading
+                {
+                    AngleXDeg = P(d, WitSensorKey.AngleX),
+                    AngleYDeg = P(d, WitSensorKey.AngleY),
+                    AngleZDeg = P(d, WitSensorKey.AngleZ),
+                    AccX = P(d, WitSensorKey.AccX), AccY = P(d, WitSensorKey.AccY), AccZ = P(d, WitSensorKey.AccZ),
+                    GyroX = P(d, WitSensorKey.AsX), GyroY = P(d, WitSensorKey.AsY), GyroZ = P(d, WitSensorKey.AsZ),
+                    Timestamp = DateTime.Now
+                };
+            };
+        }
+
+        public ImuReading ReadLatest()
+        {
+            var l = _latest;
+            if (l == null) throw new InvalidOperationException("尚未收到 IMU 数据(检查连接/稳态)。");
+            return l;
+        }
+
+        public void Dispose() { }
+
+        private static double P(Bwt901ble d, string key)
+        {
+            double v; return double.TryParse(d.GetDeviceData(key), out v) ? v : 0;
+        }
+    }
+#else
+    public sealed class Bwt901ImuSource : IImuSource
+    {
         public void Open()
         {
             throw new NotSupportedException(
-                "IMU 驱动未实现。请对接 BWT901BLE：连接后订阅 OnRecord，\n" +
-                "ReadLatest() 用 GetDeviceData(WitSensorKey.AngleX/Y/Z, AccX.., AsX..) 填 ImuReading。");
+                "IMU 驱动未实现(默认骨架)。二选一：\n" +
+                "A) 用 DelegatingImuSource 注入现成读数(推荐, 无需改本类)；\n" +
+                "B) 定义 USE_WITSDK 并引用 Wit SDK，用 Bwt901ImuSource(Bwt901ble) 参考实现\n" +
+                "   (OnRecord → GetDeviceData(WitSensorKey.AngleX/Y/Z, AccX.., AsX..))。");
         }
-
         public ImuReading ReadLatest() { throw new NotSupportedException("IMU ReadLatest() 未实现。"); }
         public void Dispose() { }
     }
+#endif
 }

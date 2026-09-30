@@ -39,7 +39,7 @@ namespace CalibrationBench.UI.Acquisition
             }
             _stage.Unlock();
             string path = Path.Combine(outDir, "0B_input.json");
-            WriteJson(path, input);
+            JsonUtil.Write(path, input);
             _log("  采集 " + s.MountingFrames + " 帧 → " + path);
             return path;
         }
@@ -93,8 +93,8 @@ namespace CalibrationBench.UI.Acquisition
 
             path0C = Path.Combine(outDir, "0C_input.json");
             path0D = Path.Combine(outDir, "0D_input.json");
-            WriteJson(path0C, c);
-            WriteJson(path0D, d);
+            JsonUtil.Write(path0C, c);
+            JsonUtil.Write(path0D, d);
             _log("0C 输入 → " + path0C);
             _log("0D 输入 → " + path0D + "  (共 " + d.Frames.Count + " 帧)");
         }
@@ -103,17 +103,6 @@ namespace CalibrationBench.UI.Acquisition
         {
             int waited = 0, target = (int)(s.SettleSeconds * 1000);
             while (waited < target) { if (_stage.IsSettled()) { } System.Threading.Thread.Sleep(50); waited += 50; }
-        }
-
-        private static void WriteJson<T>(string path, T obj)
-        {
-            using (var ms = new MemoryStream())
-            {
-                var settings = new DataContractJsonSerializerSettings { UseSimpleDictionaryFormat = true };
-                var ser = new DataContractJsonSerializer(typeof(T), settings);
-                ser.WriteObject(ms, obj);
-                File.WriteAllText(path, Encoding.UTF8.GetString(ms.ToArray()), new UTF8Encoding(false));
-            }
         }
     }
 }
