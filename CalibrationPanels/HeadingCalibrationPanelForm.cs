@@ -40,7 +40,7 @@ namespace dsat.CalibrationPanels
         private bool _resultReady;
 
         public HeadingCalibrationPanelForm(string baseDirectory, TryGetImuAnglesDelegate imuProvider)
-            : base("航向标定 (Step 0C)")
+            : base("航向现场校核 (Step 0C · 现场)")
         {
             _pathService = new CalibrationPathService(baseDirectory);
             _imuProvider = imuProvider;
@@ -71,7 +71,8 @@ namespace dsat.CalibrationPanels
             AddStep(new WizardStep
             {
                 Title = "前置检查",
-                Instruction = "航向标定需要 Step 0A（相机标定）已完成，Step 0B（安装角标定）建议已完成。\n确认下方状态后继续。",
+                Instruction = "【现场校核】本页在现场校核/更新导入的出厂 ψ_offset，不依赖出厂校准台。\n" +
+                    "需先『导入出厂校准』(含内参/安装角/ψ_offset)。有已知方向参考线时用模式A校核；无参考则沿用出厂值。",
                 Content = panel
             });
         }
@@ -263,7 +264,7 @@ namespace dsat.CalibrationPanels
             AddStep(new WizardStep
             {
                 Title = "计算结果",
-                Instruction = "以下为航向偏移计算结果。确认无误后点击完成保存到配置文件。",
+                Instruction = "以下为航向现场校核结果。确认无误后点击完成，更新配置中的 ψ_offset 与磁偏角 D。",
                 Content = panel,
                 OnEnter = () => ComputeHeading(cfg)
             });

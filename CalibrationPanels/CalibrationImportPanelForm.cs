@@ -1,6 +1,8 @@
 using System;
 using System.Globalization;
 using System.IO;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
 using System.Windows.Forms;
 using dsat.DataProcessing.Calibration;
 
@@ -154,7 +156,8 @@ namespace dsat.CalibrationPanels
                 string.Format(CultureInfo.InvariantCulture, "磁偏角 D={0:F4}°\r\n", imp.MagneticDeclination) +
                 string.Format(CultureInfo.InvariantCulture, "高度 H={0:F1} mm  {1}\r\n", imp.HeightH, hWarn ? "← 需在下一步录入" : "") +
                 "──────────────────────────\r\n" +
-                "0D 综合验证放行报告见工装 device_info/<设备号>/factory_verification/。\r\n" +
+                (TryLoadVerification(Path.GetDirectoryName(Path.GetFullPath(src)), imp.DeviceId)
+                    ?? "0D 放行报告: 未找到(可选，见工装 device_info/<设备号>/factory_verification/)") + "\r\n" +
                 (hWarn ? "⚠ H=0：请在『下一步』录入现场高度 H，否则后处理偏移为 0。" : "✓ 参数完整。");
 
             SetStatus(hWarn ? "导入成功(注意：H=0，下一步录入)" : "导入成功", !hWarn);
@@ -173,6 +176,42 @@ namespace dsat.CalibrationPanels
                 cfg.Save(_pathService.ConfigPath);
             }
             catch { /* 保存失败不阻断关闭 */ }
+        }
+
+        /// <summary>在 config 同级 device_info/&lt;设备号&gt;/factory_verification/output 下查找最新 0D 报告并摘要。</summary>
+        private static string TryLoadVerification(string configDir, string deviceId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(configDir) || string.IsNullOrEmpty(deviceId)) return null;
+                string dir = Path.Combine(configDir, "device_info", deviceId, "factory_verification", "output");
+                if (!Directory.Exists(dir)) return null;
+                string[] files = Directory.GetFiles(dir, "*.json");
+                if (files.Length == 0) return null;
+                string latest = null; DateTime best = DateTime.MinValue;
+                foreach (var f in files) { var t = File.GetLastWriteTime(f); if (t > best) { best = t; latest = f; } }
+                using (var fs = File.OpenRead(latest))
+                {
+                    var ser = new DataContractJsonSerializer(typeof(VerificationReport));
+                    var r = (VerificationReport)ser.ReadObject(fs);
+                    return string.Format(CultureInfo.InvariantCulture,
+                        "0D 放行: {0}   σ_rot={1:F3}mm  闭合max={2:F3}mm  均值={3:F3}mm  预测={4:F3}mm",
+                        r.Passed ? "PASS ✓" : "FAIL ✗", r.SigmaRot_mm, r.ClosureMax_mm, r.ClosureMean_mm, r.PredictedErr_mm);
+                }
+            }
+            catch { return null; }
+        }
+
+        [DataContract]
+        private sealed class VerificationReport
+        {
+#pragma warning disable 0649
+            [DataMember] public bool Passed;
+            [DataMember] public double SigmaRot_mm;
+            [DataMember] public double ClosureMax_mm;
+            [DataMember] public double ClosureMean_mm;
+            [DataMember] public double PredictedErr_mm;
+#pragma warning restore 0649
         }
     }
 }
