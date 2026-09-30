@@ -18,6 +18,8 @@ namespace CalibrationBench.UI
         private readonly NumericUpDown _azCount = new NumericUpDown();
         private readonly NumericUpDown _framesPerAz = new NumericUpDown();
         private readonly NumericUpDown _settleSec = new NumericUpDown();
+        private readonly ComboBox _dataSource = new ComboBox();
+        private readonly TextBox _stagePort = new TextBox();
 
         public MainForm()
         {
@@ -54,7 +56,7 @@ namespace CalibrationBench.UI
             grp.Controls.Add(tip);
             Controls.Add(grp);
 
-            var acq = new GroupBox { Text = "采集编排(模拟数据源，预留真实相机/旋转台/IMU 驱动)", Left = 12, Top = y + 108, Width = 900, Height = 104 };
+            var acq = new GroupBox { Text = "采集编排(数据源可切换：模拟 / 真实驱动)", Left = 12, Top = y + 108, Width = 900, Height = 104 };
             AddNumeric(acq, "方位间隔°", _azStep, 45, 5, 90, 16, 26);
             AddNumeric(acq, "方位数", _azCount, 8, 3, 24, 176, 26);
             AddNumeric(acq, "每方位帧数", _framesPerAz, 25, 1, 200, 316, 26);
@@ -64,9 +66,17 @@ namespace CalibrationBench.UI
             var bRot = new Button { Text = "采集 0C/0D(多方位)", Left = 766, Top = 22, Width = 130, Height = 28 };
             bRot.Click += (s, e) => RunAcquireRotation();
             acq.Controls.Add(bMount); acq.Controls.Add(bRot);
-            var atip = new Label { Left = 16, Top = 66, Width = 870, Height = 30,
-                Text = "step-and-stare：每方位下发旋转→悬停稳定→间隔采样多帧→PnP。产出输入 JSON 后用上方按钮执行(0B/0C/0D)。" };
-            acq.Controls.Add(atip);
+            var lbSrc = new Label { Left = 16, Top = 62, Width = 52, Text = "数据源" };
+            _dataSource.Left = 68; _dataSource.Top = 59; _dataSource.Width = 130;
+            _dataSource.DropDownStyle = ComboBoxStyle.DropDownList;
+            _dataSource.Items.AddRange(new object[] { "模拟(无硬件)", "真实(硬件驱动)" });
+            _dataSource.SelectedIndex = 0;
+            var lbPort = new Label { Left = 210, Top = 62, Width = 84, Text = "旋转台串口" };
+            _stagePort.Left = 296; _stagePort.Top = 59; _stagePort.Width = 80; _stagePort.Text = "COM3";
+            var atip = new Label { Left = 392, Top = 62, Width = 500, Height = 30,
+                Text = "真实模式需实现相机/PnP/IMU 驱动(见 Acquisition/Real)；旋转台为串口可用实现。" };
+            acq.Controls.Add(lbSrc); acq.Controls.Add(_dataSource);
+            acq.Controls.Add(lbPort); acq.Controls.Add(_stagePort); acq.Controls.Add(atip);
             Controls.Add(acq);
 
             _status.Left = 12; _status.Top = y + 216; _status.Width = 900; _status.Height = 22;
@@ -184,20 +194,40 @@ namespace CalibrationBench.UI
             return dir;
         }
 
+        private void MakeBench(Acquisition.AcquisitionSettings s, out Acquisition.IRotaryStage stage, out Acquisition.ISceneCapture scene)
+        {
+            if (_dataSource.SelectedIndex == 1) // 真实驱动
+            {
+                Log("数据源=真实：旋转台串口 " + _stagePort.Text + "；相机/PnP/IMU 需已实现 Acquisition/Real 驱动。", Color.DimGray);
+                stage = new Acquisition.Real.RealRotaryStage(_stagePort.Text);
+                scene = new Acquisition.Real.RealSceneCapture(
+                    new Acquisition.Real.IndustrialCameraSource(),
+                    new Acquisition.Real.OpenCvCharucoPnpSolver(),
+                    new Acquisition.Real.Bwt901ImuSource(),
+                    s.SimIntrinsics()); // 真机内参应取自 0A/config
+            }
+            else // 模拟
+            {
+                var b = new Acquisition.SimulatedBench(s);
+                stage = b; scene = b;
+            }
+        }
+
         private void RunAcquireMounting()
         {
             try
             {
                 var s = BuildSettings();
-                var bench = new Acquisition.SimulatedBench(s);
-                var orch = new Acquisition.AcquisitionOrchestrator(bench, bench, m => Log(m, Color.Black));
+                Acquisition.IRotaryStage stage; Acquisition.ISceneCapture scene;
+                MakeBench(s, out stage, out scene);
+                var orch = new Acquisition.AcquisitionOrchestrator(stage, scene, m => Log(m, Color.Black));
                 Log("▶ 采集 0B(静止多帧) ...", Color.Black);
                 string path = orch.AcquireMounting(s, AcqDir());
                 SetStatus("0B 采集完成", Color.Green);
                 Log("✔ 0B 输入已生成：" + path + "  → 点『Step 0B』选它执行", Color.Green);
                 Log("", Color.Black);
             }
-            catch (Exception ex) { SetStatus("采集异常: " + ex.Message, Color.Firebrick); Log("异常: " + ex.Message, Color.Firebrick); }
+            catch (Exception ex) { SetStatus("采集异常: " + ex.Message, Color.Firebrick); Log("异常: " + ex.Message, Color.Firebrick); Log("", Color.Black); }
         }
 
         private void RunAcquireRotation()
@@ -205,8 +235,9 @@ namespace CalibrationBench.UI
             try
             {
                 var s = BuildSettings();
-                var bench = new Acquisition.SimulatedBench(s);
-                var orch = new Acquisition.AcquisitionOrchestrator(bench, bench, m => Log(m, Color.Black));
+                Acquisition.IRotaryStage stage; Acquisition.ISceneCapture scene;
+                MakeBench(s, out stage, out scene);
+                var orch = new Acquisition.AcquisitionOrchestrator(stage, scene, m => Log(m, Color.Black));
                 Log("▶ 采集 0C/0D(多方位 step-and-stare) ...", Color.Black);
                 string p0c, p0d;
                 orch.AcquireRotation(s, AcqDir(), out p0c, out p0d);
@@ -216,7 +247,7 @@ namespace CalibrationBench.UI
                 Log("→ 依次点『Step 0C』『Step 0D』选对应文件执行", Color.Green);
                 Log("", Color.Black);
             }
-            catch (Exception ex) { SetStatus("采集异常: " + ex.Message, Color.Firebrick); Log("异常: " + ex.Message, Color.Firebrick); }
+            catch (Exception ex) { SetStatus("采集异常: " + ex.Message, Color.Firebrick); Log("异常: " + ex.Message, Color.Firebrick); Log("", Color.Black); }
         }
 
         private void SetStatus(string text, Color c) { _status.Text = text; _status.ForeColor = c; }

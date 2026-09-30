@@ -55,6 +55,18 @@ CalibrationEngine.exe --step 0D --input samples\0D_input.json --output out.json 
   - 之后用步骤按钮选对应文件执行。
 - 当前数据源为**模拟**（`Acquisition/Sim/SimulatedBench`），硬件访问抽象为 HAL 接口（`IRotaryStage`/`ISceneCapture`）；接入真实相机/旋转台/IMU 只需实现同接口替换模拟类。
 
+## 数据源切换与真实驱动骨架
+
+界面「采集编排」有**数据源下拉（模拟 / 真实）**与旋转台串口输入：
+
+- **模拟**：无硬件，按已知真值合成，端到端可跑通。
+- **真实**：使用 `Acquisition/Real` 下的驱动：
+  - `RealRotaryStage`（`System.IO.Ports` 串口，**可用实现**；协议 `MOVE/LOCK/STAT?`，按转台改命令帧即可）
+  - `RealSceneCapture`（**完整实现** PnP 位姿→offset/H/姿态/方位 换算，含 Rodrigues）
+  - 三个 IO **骨架**待接入：`IndustrialCameraSource`（相机 SDK）、`OpenCvCharucoPnpSolver`（OpenCvSharp `CvAruco`+`SolvePnP`）、`Bwt901ImuSource`（对接 `Bwt901ble`）。未实现时会抛出带对接指引的异常。
+
+接入真实硬件只需实现这三个骨架类的方法体，采集编排/引擎/界面/契约均无需改动。
+
 输入/输出每项字段与存储位置见 [数据字典与接口说明.md](数据字典与接口说明.md)。
 
 方案与台架设计见 [../校准台研制详细方案设计.md](../校准台研制详细方案设计.md)、[../校准方案（靶标板自定位）.md](../校准方案（靶标板自定位）.md)、[../校准台设计指南与步骤.md](../校准台设计指南与步骤.md)。

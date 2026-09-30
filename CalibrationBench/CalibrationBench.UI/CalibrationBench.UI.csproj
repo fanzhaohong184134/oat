@@ -43,6 +43,10 @@
     <Compile Include="Acquisition\AcquisitionSettings.cs" />
     <Compile Include="Acquisition\Hal\Hal.cs" />
     <Compile Include="Acquisition\InputContracts.cs" />
+    <Compile Include="Acquisition\Real\HardwareInterfaces.cs" />
+    <Compile Include="Acquisition\Real\RealRotaryStage.cs" />
+    <Compile Include="Acquisition\Real\RealSceneCapture.cs" />
+    <Compile Include="Acquisition\Real\Skeletons.cs" />
     <Compile Include="Acquisition\Sim\SimulatedBench.cs" />
     <Compile Include="EngineRunner.cs" />
     <Compile Include="MainForm.cs" />
