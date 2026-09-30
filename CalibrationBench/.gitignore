@@ -11,3 +11,4 @@ installer/Output/
 **/device_info/
 *_output.json
 calibration_config.json
+acquired/

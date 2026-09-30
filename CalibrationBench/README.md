@@ -46,6 +46,15 @@ CalibrationEngine.exe --step 0D --input samples\0D_input.json --output out.json 
 | 0C | 航向 ψ_offset（≥8 方位） | 残差 < 0.1° |
 | 0D | 综合验证（PnP 闭合 + 旋转不变性） | σ_rot<0.3mm 且 闭合<0.5mm |
 
+## 采集编排（旋转采集只 0C/0D 需要，且共用一次采集）
+
+- 旋转台仅 **0C 与 0D** 需要，二者**共用一次 8/9 方位 step-and-stare 采集**；0A（棋盘格多姿态静态）、0B（铅垂静止多帧）不转台。
+- 界面「采集编排」分组：设方位间隔°/方位数/每方位帧数/稳定秒 → 一键采集：
+  - `采集 0B(静止)` → 生成 `acquired\0B_input.json`
+  - `采集 0C/0D(多方位)` → 生成 `acquired\0C_input.json`、`acquired\0D_input.json`
+  - 之后用步骤按钮选对应文件执行。
+- 当前数据源为**模拟**（`Acquisition/Sim/SimulatedBench`），硬件访问抽象为 HAL 接口（`IRotaryStage`/`ISceneCapture`）；接入真实相机/旋转台/IMU 只需实现同接口替换模拟类。
+
 输入/输出每项字段与存储位置见 [数据字典与接口说明.md](数据字典与接口说明.md)。
 
 方案与台架设计见 [../校准台研制详细方案设计.md](../校准台研制详细方案设计.md)、[../校准方案（靶标板自定位）.md](../校准方案（靶标板自定位）.md)、[../校准台设计指南与步骤.md](../校准台设计指南与步骤.md)。
