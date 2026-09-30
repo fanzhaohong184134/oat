@@ -83,13 +83,18 @@ namespace dsat.CalibrationPanels
             _dBox = CreateEditBox("", 160); _dBox.Left = 220; _dBox.Top = 56;
 
             var note = CreateInfoLabel(
-                "说明：H、D 为现场变量，每次架站录入。\n" +
+                "说明：H、D 为现场变量，每次架站录入（出厂已含 ψ_offset/D 等，H 需现场测量）。\n" +
                 "H 用激光测距获取；未录入(H=0)时后处理偏移计算结果为 0。\n" +
                 "点『完成』写入 calibration_config.json。");
-            note.Left = 12; note.Top = 104;
+            note.Left = 12; note.Top = 150;
+
+            var checkBtn = new Button { Text = "一键校验完整性", Left = 12, Top = 104, Width = 150, Height = 28 };
+            StyleButton(checkBtn, false);
+            checkBtn.Click += (s, e) => ShowCompleteness();
 
             content.Controls.Add(lbH); content.Controls.Add(_hBox);
             content.Controls.Add(lbD); content.Controls.Add(_dBox);
+            content.Controls.Add(checkBtn);
             content.Controls.Add(note);
 
             AddStep(new WizardStep
@@ -163,6 +168,41 @@ namespace dsat.CalibrationPanels
             SetStatus(hWarn ? "导入成功(注意：H=0，下一步录入)" : "导入成功", !hWarn);
             _hBox.Text = imp.HeightH.ToString("F1", CultureInfo.InvariantCulture);
             _dBox.Text = imp.MagneticDeclination.ToString("F4", CultureInfo.InvariantCulture);
+        }
+
+        /// <summary>一键校验配置完整性（内参/δ/ψ/D/H 是否齐全）。</summary>
+        private void ShowCompleteness()
+        {
+            var cfg = LoadConfigSafe(_pathService.ConfigPath);
+            double h, d;
+            double hv = double.TryParse(_hBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out h) ? h : cfg.HeightH;
+            double dv = double.TryParse(_dBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out d) ? d : cfg.MagneticDeclination;
+
+            bool okK = cfg.Fx > 0 && cfg.Fy > 0 && cfg.Cx > 0 && cfg.Cy > 0;
+            bool okDelta = okK; // 内参存在即视为出厂配置已导入(δ 含其中，δ=0 亦为有效标定值)
+            bool okPsi = Math.Abs(cfg.PsiOffset) > 1e-9 || Math.Abs(cfg.AlphaBoard) > 1e-9;
+            bool okDdecl = Math.Abs(dv) > 1e-9;
+            bool okH = hv > 0;
+
+            string Mark(bool ok, bool warnOnly = false) => ok ? "✓" : (warnOnly ? "⚠" : "✗");
+
+            var sb = new System.Text.StringBuilder();
+            sb.AppendLine("══ 配置完整性校验 ══");
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "{0} 相机内参  fx={1:F1} fy={2:F1} cx={3:F1} cy={4:F1}", Mark(okK), cfg.Fx, cfg.Fy, cfg.Cx, cfg.Cy));
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "{0} 安装角 δ  pitch={1:F4}° roll={2:F4}°", Mark(okDelta), cfg.DeltaPitch, cfg.DeltaRoll));
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "{0} 航向 ψ_offset={1:F4}°{2}", Mark(okPsi, true), cfg.PsiOffset, okPsi ? "" : "  (为0，如未做0C可现场校核)"));
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "{0} 磁偏角 D={1:F4}°{2}", Mark(okDdecl, true), dv, okDdecl ? "" : "  (为0，请确认测站磁偏角)"));
+            sb.AppendLine(string.Format(CultureInfo.InvariantCulture, "{0} 高度 H={1:F1} mm{2}", Mark(okH), hv, okH ? "" : "  (必填！否则后处理偏移为0)"));
+            sb.AppendLine("──────────────────────────");
+
+            bool complete = okK && okH; // 阻断性: 内参 + H
+            sb.AppendLine(complete
+                ? (okPsi && okDdecl ? "结论: ✓ 配置完整，可进行测量与后处理。" : "结论: ✓ 关键项齐全(ψ/D 为可选警示)。")
+                : "结论: ✗ 配置不完整，请补齐上面标 ✗ 的项。");
+
+            MessageBox.Show(sb.ToString(), "配置完整性校验",
+                MessageBoxButtons.OK, complete ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+            SetStatus(complete ? "校验通过" : "校验未通过：存在缺失项", complete);
         }
 
         protected override void OnWizardFinish()

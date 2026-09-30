@@ -740,6 +740,15 @@ namespace dsat
             importCalibButton.Click += importCalibButton_Click;
             grid.Controls.Add(importCalibButton, 0, 3);
             grid.SetColumnSpan(importCalibButton, 2);
+
+            // 出厂/现场 分类提示
+            var calibTip = new ToolTip { AutoPopDelay = 8000, InitialDelay = 300, ReshowDelay = 100 };
+            calibTip.SetToolTip(cameraCalibButton, "出厂项(依赖校准台) · dsat 只读查看，经导入维护");
+            calibTip.SetToolTip(mountingCalibButton, "出厂项(依赖校准台) · dsat 只读查看，经导入维护");
+            calibTip.SetToolTip(instrumentCalibButton, "现场项 · 航向现场校核(不依赖校准台)；出厂值经导入，现场按需覆盖");
+            calibTip.SetToolTip(magCalibrationButton, "现场项 · 磁力计标定(不依赖校准台)；出厂已标，现场按需重标");
+            calibTip.SetToolTip(chipTimeCalibrationButton, "现场项 · 芯片时间校准(不依赖校准台)");
+            calibTip.SetToolTip(importCalibButton, "导入出厂校准数据(内参/δ/ψ/D) + 录入现场 H、D；读显 0D 放行报告");
         }
 
         private void StatusLight_BackColorChanged(object sender, EventArgs e)
