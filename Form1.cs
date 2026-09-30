@@ -1668,6 +1668,8 @@ namespace dsat
                 _isMagCalibrating = false;
                 magCalibrationButton.BackColor = ThemeButton;
                 magCalibrationButton.Text = "磁场校准";
+                MessageBox.Show("磁场校准完成。软硬铁参数已写入 IMU，将随出厂配置一并使用；现场如遇磁环境变化可再次校准。",
+                    "磁场校准", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

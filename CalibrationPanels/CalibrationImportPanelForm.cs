@@ -19,6 +19,7 @@ namespace dsat.CalibrationPanels
         private TextBox _summaryBox;
         private TextBox _hBox;
         private TextBox _dBox;
+        private Label _checkResultLabel;
         private bool _imported;
 
         public CalibrationImportPanelForm(string baseDirectory)
@@ -92,9 +93,14 @@ namespace dsat.CalibrationPanels
             StyleButton(checkBtn, false);
             checkBtn.Click += (s, e) => ShowCompleteness();
 
+            _checkResultLabel = CreateInfoLabel("完整性：未校验");
+            _checkResultLabel.Left = 176; _checkResultLabel.Top = 110; _checkResultLabel.AutoSize = false;
+            _checkResultLabel.Width = 470; _checkResultLabel.Height = 20;
+
             content.Controls.Add(lbH); content.Controls.Add(_hBox);
             content.Controls.Add(lbD); content.Controls.Add(_dBox);
             content.Controls.Add(checkBtn);
+            content.Controls.Add(_checkResultLabel);
             content.Controls.Add(note);
 
             AddStep(new WizardStep
@@ -210,6 +216,16 @@ namespace dsat.CalibrationPanels
             MessageBox.Show(sb.ToString(), "配置完整性校验",
                 MessageBoxButtons.OK, complete ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
             SetStatus(complete ? "校验通过" : "校验未通过：存在缺失项", complete);
+            if (_checkResultLabel != null)
+            {
+                string line = string.Format(CultureInfo.InvariantCulture,
+                    "完整性：{0}  内参{1} δ{2} ψ{3} D{4} H{5}",
+                    complete ? "✓ 通过" : "✗ 缺失",
+                    okK ? "✓" : "✗", okDelta ? "✓" : "✗",
+                    okPsi ? "✓" : "⚠", okDdecl ? "✓" : "⚠", okH ? "✓" : "✗");
+                _checkResultLabel.Text = line;
+                _checkResultLabel.ForeColor = complete ? ThemeSuccess : System.Drawing.Color.DarkRed;
+            }
         }
 
         protected override void OnWizardFinish()
