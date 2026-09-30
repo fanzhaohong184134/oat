@@ -1513,7 +1513,7 @@ namespace dsat
                     MessageBox.Show(ex.Message);
                 }
             }
-            MessageBox.Show("ChipTime 校准完成，已同步为: " + now.ToString("yyyy-MM-dd HH:mm:ss.fff"), "校准成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MessageBox.Show("【现场项 · 不依赖校准台】ChipTime 校准完成，已同步为: " + now.ToString("yyyy-MM-dd HH:mm:ss.fff"), "校准成功", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         /// <summary>
@@ -1639,7 +1639,7 @@ namespace dsat
                 _isMagCalibrating = true;
                 magCalibrationButton.BackColor = ThemeButtonActive;
                 magCalibrationButton.Text = "磁场校准中... (再次点击停止)";
-                MessageBox.Show("开始磁场校准,请绕传感器XYZ三轴各转一圈,转完以后再次点击按钮结束校准");
+                MessageBox.Show("【现场项 · 不依赖校准台】开始磁场校准,请绕传感器XYZ三轴各转一圈,转完以后再次点击按钮结束校准");
             }
             else
             {

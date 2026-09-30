@@ -117,7 +117,14 @@ namespace dsat.CalibrationPanels
                     { SetStatus("H 格式错误(应为非负数值，mm)", false); return false; }
                     if (!double.TryParse(_dBox.Text, NumberStyles.Float, CultureInfo.InvariantCulture, out d))
                     { SetStatus("磁偏角 D 格式错误", false); return false; }
-                    if (h <= 0) SetStatus("提示：H=0，后处理偏移将为 0", false);
+                    // 完成时自动校验完整性，并拦截 H 缺失
+                    if (h <= 0)
+                    {
+                        var r = MessageBox.Show(
+                            "H=0（未录入相机高度）。后处理偏移计算结果将为 0。\n\n是否仍要完成？(建议：先测量并录入 H)",
+                            "完整性拦截", MessageBoxButtons.YesNo, MessageBoxIcon.Warning);
+                        if (r != DialogResult.Yes) { SetStatus("已拦截：请录入现场高度 H", false); return false; }
+                    }
                     return true;
                 }
             });
