@@ -49,12 +49,24 @@ build_installer.bat
 - `camera/`：相机采样与预览相关能力
 - `Sampling/`：IMU 采样记录与日志
 - `installer/`：安装包脚本与 Inno Setup 配置
+- `CalibrationBench/`：独立出厂校准工装（无界面引擎 + WinForms 界面，与 dsat 主程序解耦）
 
 ## 文档
 
 - 使用说明书：`数字对中仪（Digital Shaft Alignment Tool）使用说明书.md`
 - 安装打包说明：`installer/README.md`
 - 分析文档：`dsat_分析文档.md`
+
+### 出厂校准（校准台 + 工装程序）
+
+- 校准与测量流程：`校准与测量流程.md`
+- 标定设计文档：`标定设计文档.md`
+- 校准方案（靶标板自定位 / PnP）：`校准方案（靶标板自定位）.md`
+- 校准台设计指南与步骤：`校准台设计指南与步骤.md`
+- 校准台研制详细方案设计（结构/硬件/软件）：`校准台研制详细方案设计.md`
+- 出厂校准工装程序：`CalibrationBench/README.md`
+- 工装使用说明（三种操作模式）：`CalibrationBench/使用说明.md`
+- 工装数据字典与接口：`CalibrationBench/数据字典与接口说明.md`
 
 ## 说明
 
