@@ -21,18 +21,37 @@ namespace CalibrationEngine.Models
         [DataMember] public int ImageHeight;    // 图像高(像素)
     }
 
-    /// <summary>汇总校准配置（写入 calibration_config.json）。</summary>
+    /// <summary>汇总校准配置（写入 calibration_config.json）。
+    /// 结构与 dsat 后处理的 CalibrationConfig 完全一致(扁平)，保证后处理可直接解析计算。
+    /// 额外字段 DeviceId/AlphaBoard/CalibratedAtUtc 仅供工装留痕，dsat 读取时忽略。</summary>
     [DataContract]
     public sealed class CalibrationConfig
     {
-        [DataMember] public string DeviceId;
-        [DataMember] public CameraIntrinsics Intrinsics;
-        [DataMember] public double DeltaPitch;          // Step 0B 安装角 pitch 偏差(°)
-        [DataMember] public double DeltaRoll;           // Step 0B 安装角 roll 偏差(°)
+        // 相机内参(顶层，与 dsat 一致)
+        [DataMember] public double Fx;
+        [DataMember] public double Fy;
+        [DataMember] public double Cx;
+        [DataMember] public double Cy;
+        [DataMember] public double K1;
+        [DataMember] public double K2;
+        [DataMember] public double P1;
+        [DataMember] public double P2;
+        [DataMember] public int ImageWidth;
+        [DataMember] public int ImageHeight;
+        // 标定量
         [DataMember] public double PsiOffset;           // Step 0C 航向偏差(°)
-        [DataMember] public double AlphaBoard;          // 靶标板 X 轴真方位(°)
+        [DataMember] public double DeltaPitch;          // Step 0B 安装角 pitch(°)
+        [DataMember] public double DeltaRoll;           // Step 0B 安装角 roll(°)
         [DataMember] public double MagneticDeclination; // 磁偏角 D(°)
-        [DataMember] public string CalibratedAtUtc;     // 最近一次标定 UTC 时间
+        [DataMember] public double HeightH;             // 相机到地面高度 H(mm)，现场测量后填入
+        // 稳态阈值(与 dsat 默认一致)
+        [DataMember] public double GThreshold = 0.005;
+        [DataMember] public double OmegaThreshold = 0.3;
+        [DataMember] public int MinStableFrames = 3;
+        // 工装留痕(dsat 忽略)
+        [DataMember] public string DeviceId;
+        [DataMember] public double AlphaBoard;          // 靶标板 X 轴真方位(°)
+        [DataMember] public string CalibratedAtUtc;
     }
 
     // ===================== Step 0A 相机内参 =====================

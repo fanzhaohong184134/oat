@@ -11,11 +11,12 @@ namespace CalibrationBench.UI.Acquisition
         private sealed class ConfigMirror
         {
 #pragma warning disable 0649 // 由反序列化赋值
-            [DataMember] public CameraIntrinsics Intrinsics;
+            [DataMember] public double Fx, Fy, Cx, Cy, K1, K2, P1, P2;
+            [DataMember] public int ImageWidth, ImageHeight;
 #pragma warning restore 0649
         }
 
-        /// <summary>返回 config 中的内参；文件不存在/无内参/解析失败时返回 null。</summary>
+        /// <summary>返回 config 中的内参(扁平顶层字段)；文件不存在/无内参/解析失败时返回 null。</summary>
         public static CameraIntrinsics LoadIntrinsics(string configPath)
         {
             try
@@ -25,7 +26,13 @@ namespace CalibrationBench.UI.Acquisition
                 {
                     var ser = new DataContractJsonSerializer(typeof(ConfigMirror));
                     var c = (ConfigMirror)ser.ReadObject(fs);
-                    return c != null && c.Intrinsics != null && c.Intrinsics.Fx > 0 ? c.Intrinsics : null;
+                    if (c == null || c.Fx <= 0) return null;
+                    return new CameraIntrinsics
+                    {
+                        Fx = c.Fx, Fy = c.Fy, Cx = c.Cx, Cy = c.Cy,
+                        K1 = c.K1, K2 = c.K2, P1 = c.P1, P2 = c.P2,
+                        ImageWidth = c.ImageWidth, ImageHeight = c.ImageHeight
+                    };
                 }
             }
             catch { return null; }

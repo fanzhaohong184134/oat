@@ -74,7 +74,13 @@ namespace CalibrationEngine
             var o = Steps.Run0A(inp);
             outputJson = Json.ToJson(o); summary = o.Message;
             if (o.Passed && configPath != null)
-                UpdateConfig(configPath, inp.DeviceId, cfg => { cfg.Intrinsics = o.Intrinsics; });
+                UpdateConfig(configPath, inp.DeviceId, cfg =>
+                {
+                    var k = o.Intrinsics;
+                    cfg.Fx = k.Fx; cfg.Fy = k.Fy; cfg.Cx = k.Cx; cfg.Cy = k.Cy;
+                    cfg.K1 = k.K1; cfg.K2 = k.K2; cfg.P1 = k.P1; cfg.P2 = k.P2;
+                    cfg.ImageWidth = k.ImageWidth; cfg.ImageHeight = k.ImageHeight;
+                });
             return o.Passed;
         }
 
