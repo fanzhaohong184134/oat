@@ -71,6 +71,9 @@
       <SubType>Form</SubType>
     </Compile>
     <Compile Include="CalibrationPanels\CalibrationRuntimeServices.cs" />
+    <Compile Include="CalibrationPanels\CalibrationImportPanelForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="CalibrationPanels\CameraCalibrationPanelForm.cs">
       <SubType>Form</SubType>
     </Compile>

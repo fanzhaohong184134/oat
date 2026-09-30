@@ -66,7 +66,7 @@ namespace dsat.CalibrationPanels
             AddStep(new WizardStep
             {
                 Title = "前置检查",
-                Instruction = "安装角标定需要相机内参 (Step 0A) 已完成。\n请确认下方状态为\"已标定\"再继续。",
+                Instruction = "【只读】安装角(0B)为出厂标定项，现已改为导入方式。本页仅供查看，不再写入配置。\n如需更新，请用校准台工装重标并通过『导入出厂校准』导入。",
                 Content = panel,
                 OnValidate = () =>
                 {
@@ -252,26 +252,10 @@ namespace dsat.CalibrationPanels
 
         protected override void OnWizardFinish()
         {
-            try
-            {
-                double avgPitch = 0, avgRoll = 0;
-                for (int i = 0; i < _trialPitch.Count; i++)
-                {
-                    avgPitch += _trialPitch[i];
-                    avgRoll += _trialRoll[i];
-                }
-                avgPitch /= _trialPitch.Count;
-                avgRoll /= _trialRoll.Count;
-
-                var config = LoadConfigSafe(_pathService.ConfigPath);
-                config.DeltaPitch = avgPitch;
-                config.DeltaRoll = avgRoll;
-                config.Save(_pathService.ConfigPath);
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("保存失败: " + ex.Message, "错误", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            MessageBox.Show(
+                "安装角(0B)已改为出厂标定 + 导入方式，本页为只读查看，未写入配置。\n" +
+                "如需更新 δ_pitch/δ_roll，请用校准台工装重标并通过主界面『导入出厂校准 / 现场参数』导入。",
+                "只读", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void RefreshImuLive()

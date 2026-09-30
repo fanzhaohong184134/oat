@@ -60,6 +60,7 @@ namespace dsat
         private Panel _sensorAlertPanel;
         private Button _cameraAlertClearButton;
         private Button _sensorAlertClearButton;
+        private Button importCalibButton;
         private CheckBox _circleCenterOverlayCheckBox;
         private CheckBox _metadataOnlyCheckBox;
         private readonly string _processingUiPrefPath = Path.Combine(
@@ -692,13 +693,14 @@ namespace dsat
                 Name = "calibrationGridLayout",
                 Dock = DockStyle.Fill,
                 ColumnCount = 2,
-                RowCount = 4,
+                RowCount = 5,
                 Margin = new Padding(0),
                 Padding = new Padding(6, 2, 6, 4)
             };
 
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             grid.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
+            grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(30)));
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(30)));
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(30)));
             grid.RowStyles.Add(new RowStyle(SizeType.Absolute, Dpi(30)));
@@ -729,6 +731,15 @@ namespace dsat
             instrumentCalibButton.Dock = DockStyle.Fill;
             instrumentCalibButton.Margin = new Padding(4, 2, 0, 2);
             grid.Controls.Add(instrumentCalibButton, 1, 2);
+
+            importCalibButton = new Button { Text = "导入出厂校准 / 现场参数(H·D)" };
+            StyleActionButton(importCalibButton, true);
+            importCalibButton.Dock = DockStyle.Fill;
+            importCalibButton.Margin = new Padding(0, 2, 0, 2);
+            importCalibButton.Height = 28;
+            importCalibButton.Click += importCalibButton_Click;
+            grid.Controls.Add(importCalibButton, 0, 3);
+            grid.SetColumnSpan(importCalibButton, 2);
         }
 
         private void StatusLight_BackColorChanged(object sender, EventArgs e)
@@ -2290,6 +2301,15 @@ namespace dsat
                     // 防止线程因异常退出
                     Thread.Sleep(500);
                 }
+            }
+        }
+
+        // ── 导入出厂校准 / 现场参数 ──
+        private void importCalibButton_Click(object sender, EventArgs e)
+        {
+            using (var panel = new CalibrationImportPanelForm(AppDomain.CurrentDomain.BaseDirectory))
+            {
+                panel.ShowDialog(this);
             }
         }
 

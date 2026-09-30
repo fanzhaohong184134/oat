@@ -26,6 +26,10 @@ namespace dsat.DataProcessing.Calibration
         [DataMember] public double GThreshold { get; set; } = 0.005;
         [DataMember] public double OmegaThreshold { get; set; } = 0.3;
         [DataMember] public int MinStableFrames { get; set; } = 3;
+        // 出厂工装留痕(由 CalibrationBench 写入；本程序仅展示/透传)
+        [DataMember] public string DeviceId { get; set; }
+        [DataMember] public double AlphaBoard { get; set; }
+        [DataMember] public string CalibratedAtUtc { get; set; }
 
         public void Save(string filePath)
         {

@@ -174,6 +174,15 @@ namespace dsat.CalibrationPanels
 
         private void RunCalibration()
         {
+            MessageBox.Show(
+                "相机内参(0A)已改为出厂标定 + 导入方式，本页为只读查看，未写入配置。\n" +
+                "如需更新内参，请用校准台工装(或 CameraCalibration.exe)标定后，通过主界面『导入出厂校准 / 现场参数』导入。",
+                "只读", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            _calibrationDone = true;
+            NextButton.Enabled = true;
+            SetStatus("只读模式：未写入配置。请用『导入出厂校准』。", false);
+            return;
+#pragma warning disable 0162 // 以下为原执行逻辑，已停用(只读)
             try
             {
                 double fx = double.Parse(_fxBox.Text, CultureInfo.InvariantCulture);
@@ -241,6 +250,7 @@ namespace dsat.CalibrationPanels
                 _resultBox.Text = "执行失败:\r\n" + ex.Message;
                 SetStatus("执行失败: " + ex.Message, false);
             }
+#pragma warning restore 0162
         }
 
         private void RefreshCameraState()
