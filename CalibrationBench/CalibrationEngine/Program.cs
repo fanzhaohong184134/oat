@@ -32,6 +32,7 @@ namespace CalibrationEngine
                 string configPath = a.ContainsKey("config") ? a["config"] : null;
                 string deviceRoot = a.ContainsKey("device-root") ? a["device-root"] : null;
                 string deviceId = a.ContainsKey("device-id") ? a["device-id"] : null;
+                string reportPath = a.ContainsKey("report") ? a["report"] : null;
 
                 if (!File.Exists(inputPath)) { Console.Error.WriteLine("输入文件不存在: " + inputPath); return 1; }
                 string inputJson = File.ReadAllText(inputPath);
@@ -42,7 +43,7 @@ namespace CalibrationEngine
                     case "0A": passed = Do0A(inputPath, out outputJson, out summary, configPath, ref deviceId); break;
                     case "0B": passed = Do0B(inputPath, out outputJson, out summary, configPath, ref deviceId); break;
                     case "0C": passed = Do0C(inputPath, out outputJson, out summary, configPath, ref deviceId); break;
-                    case "0D": passed = Do0D(inputPath, out outputJson, out summary, configPath, ref deviceId); break;
+                    case "0D": passed = Do0D(inputPath, out outputJson, out summary, configPath, ref deviceId, reportPath, deviceRoot); break;
                     default: Console.Error.WriteLine("未知步骤: " + step); return 1;
                 }
 
@@ -111,12 +112,37 @@ namespace CalibrationEngine
             return o.Passed;
         }
 
-        private static bool Do0D(string inputPath, out string outputJson, out string summary, string configPath, ref string deviceId)
+        private static bool Do0D(string inputPath, out string outputJson, out string summary, string configPath, ref string deviceId,
+                                 string reportPath, string deviceRoot)
         {
             var inp = Json.ReadFile<Step0DInput>(inputPath);
             if (deviceId == null) deviceId = inp.DeviceId;
             var o = Steps.Run0D(inp);
             outputJson = Json.ToJson(o); summary = o.Message;
+
+            // 自动生成出厂校准报告(Markdown)
+            try
+            {
+                CalibrationConfig cfg = (configPath != null && File.Exists(configPath))
+                    ? Json.ReadFile<CalibrationConfig>(configPath) : new CalibrationConfig { DeviceId = inp.DeviceId };
+                string md = ReportWriter.Build(cfg, o);
+
+                string target = reportPath;
+                if (target == null && deviceRoot != null && deviceId != null)
+                {
+                    string dir = Path.Combine(deviceRoot, "device_info", deviceId, "factory_verification", "output");
+                    Directory.CreateDirectory(dir);
+                    target = Path.Combine(dir, "calibration_report_" + Paths.Timestamp() + ".md");
+                }
+                if (target != null)
+                {
+                    EnsureDir(target);
+                    File.WriteAllText(target, md, new UTF8Encoding(false));
+                    Console.WriteLine("出厂报告: " + target);
+                }
+            }
+            catch (Exception ex) { Console.Error.WriteLine("报告生成警告: " + ex.Message); }
+
             return o.Passed;
         }
 
@@ -161,7 +187,7 @@ namespace CalibrationEngine
 
         private static void PrintUsage()
         {
-            Console.Error.WriteLine("用法: CalibrationEngine.exe --step 0A|0B|0C|0D --input in.json --output out.json [--config cfg.json] [--device-root DIR] [--device-id ID]");
+            Console.Error.WriteLine("用法: CalibrationEngine.exe --step 0A|0B|0C|0D --input in.json --output out.json [--config cfg.json] [--device-root DIR] [--device-id ID] [--report report.md]");
         }
     }
 }

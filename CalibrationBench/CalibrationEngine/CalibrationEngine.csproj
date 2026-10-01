@@ -41,6 +41,7 @@
     <Compile Include="Models.cs" />
     <Compile Include="Paths.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ReportWriter.cs" />
     <Compile Include="Steps.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
