@@ -53,8 +53,11 @@ namespace CalibrationBench.UI
             AddStepButton(grp, "Step 0B 安装角", "0B", 236);
             AddStepButton(grp, "Step 0C 航向", "0C", 456);
             AddStepButton(grp, "Step 0D 综合验证", "0D", 676);
-            var tip = new Label { Left = 16, Top = 58, Width = 860, Height = 30,
-                Text = "手动模式：选择输入 JSON 执行。0A/0B/0C 合格后写入 calibration_config.json；0D 生成放行结果。" };
+            var bOpenReport = new Button { Text = "打开最新报告", Left = 676, Top = 58, Width = 200, Height = 26 };
+            bOpenReport.Click += (s, e) => OpenLatestReport();
+            grp.Controls.Add(bOpenReport);
+            var tip = new Label { Left = 16, Top = 58, Width = 650, Height = 30,
+                Text = "手动模式：选择输入 JSON 执行。0A/0B/0C 合格后写入 calibration_config.json；0D 生成放行结果并自动产出报告。" };
             grp.Controls.Add(tip);
             Controls.Add(grp);
 
@@ -333,6 +336,37 @@ namespace CalibrationBench.UI
             catch (Exception ex) { Log("✖ 场景采集：" + ex.Message, Color.Firebrick); }
 
             Log("自检完成。", Color.Black); Log("", Color.Black);
+        }
+
+        // ---- 打开最新出厂报告 ----
+        private void OpenLatestReport()
+        {
+            try
+            {
+                string root = string.IsNullOrEmpty(_deviceRoot.Text) ? AppDomain.CurrentDomain.BaseDirectory : _deviceRoot.Text;
+                string baseDir = System.IO.Path.Combine(root, "device_info");
+                string id = _deviceId.Text;
+                var candidates = new System.Collections.Generic.List<string>();
+                string idDir = System.IO.Path.Combine(baseDir, id ?? "", "factory_verification", "output");
+                if (System.IO.Directory.Exists(idDir))
+                    candidates.AddRange(System.IO.Directory.GetFiles(idDir, "calibration_report_*.md"));
+                // 兜底：device_info 下所有设备
+                if (candidates.Count == 0 && System.IO.Directory.Exists(baseDir))
+                    candidates.AddRange(System.IO.Directory.GetFiles(baseDir, "calibration_report_*.md", System.IO.SearchOption.AllDirectories));
+
+                if (candidates.Count == 0)
+                {
+                    SetStatus("未找到报告", Color.DarkOrange);
+                    Log("未找到出厂报告(先执行 Step 0D 生成)。查找目录: " + idDir, Color.DarkOrange);
+                    return;
+                }
+                string latest = null; DateTime best = DateTime.MinValue;
+                foreach (var f in candidates) { var t = System.IO.File.GetLastWriteTime(f); if (t > best) { best = t; latest = f; } }
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(latest) { UseShellExecute = true });
+                SetStatus("已打开最新报告", Color.Green);
+                Log("✔ 打开报告: " + latest, Color.Green);
+            }
+            catch (Exception ex) { SetStatus("打开报告失败: " + ex.Message, Color.Firebrick); Log("异常: " + ex.Message, Color.Firebrick); }
         }
 
         private void RunAcquireMounting()

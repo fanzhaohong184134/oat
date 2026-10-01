@@ -98,7 +98,7 @@ CalibrationEngine.exe --step 0D --input samples\0D_input.json --output out.json 
 
 输入/输出每项字段与存储位置见 [数据字典与接口说明.md](数据字典与接口说明.md)。
 
-> Step 0D 执行时（带 `--device-root/--device-id` 或 `--report`）**自动生成填好的出厂校准报告** `factory_verification/output/calibration_report_<时间戳>.md`（含设备号/内参/δ/ψ/0D 指标与放行判定）。界面执行 0D 亦自动产出。
+> Step 0D 执行时（带 `--device-root/--device-id` 或 `--report`）**自动生成填好的出厂校准报告** `factory_verification/output/calibration_report_<时间戳>.md`（含设备号/内参/δ/ψ/0D 指标与放行判定）。界面执行 0D 亦自动产出，点界面『打开最新报告』可直接查看。
 
 方案与台架设计见 [../校准台研制详细方案设计.md](../校准台研制详细方案设计.md)、[../校准方案（靶标板自定位）.md](../校准方案（靶标板自定位）.md)、[../校准台设计指南与步骤.md](../校准台设计指南与步骤.md)。
 
